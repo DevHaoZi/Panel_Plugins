@@ -1,0 +1,21 @@
+{
+    "name": "panel/php81",
+    "description": "php81 plugin for haozi linux panel",
+    "type": "project",
+    "license": "GPLv3",
+    "autoload": {
+        "psr-4": {
+            "Plugins\\Php81\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "耗子",
+            "email": "i@haozi.net"
+        }
+    ],
+    "require": {},
+    "config": {
+        "optimize-autoloader": true
+    }
+}

@@ -2,7 +2,7 @@
 /**
  * Name: OpenResty插件控制器
  * Author:耗子
- * Date: 2022-06-29
+ * Date: 2022-11-02
  */
 
 namespace Plugins\Openresty\Controllers;
@@ -21,12 +21,12 @@ class OpenrestyController extends Controller
 
     public function status()
     {
-        $command = '/etc/init.d/nginx status';
+        $command = 'systemctl status nginx';
         $result = shell_exec($command);
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        if (str_contains($result, 'stopped')) {
+        if (str_contains($result, 'inactive')) {
             $res['data'] = 'stopped';
         } else {
             $res['data'] = 'running';
@@ -49,7 +49,7 @@ class OpenrestyController extends Controller
             return response()->json($res);
         }
 
-        $command2 = '/etc/init.d/nginx restart';
+        $command2 = 'systemctl restart nginx';
         $result2 = shell_exec($command2);
         if (str_contains($result2, 'done')) {
             $res['data'] = 'OpenResty已重启';
@@ -71,7 +71,7 @@ class OpenrestyController extends Controller
             return response()->json($res);
         }
 
-        $command2 = '/etc/init.d/nginx reload';
+        $command2 = 'systemctl reload nginx';
         $result2 = shell_exec($command2);
         if (str_contains($result2, 'done')) {
             $res['data'] = 'OpenResty已重载';
@@ -112,7 +112,7 @@ class OpenrestyController extends Controller
             return response()->json($res);
         } else {
             // 测试成功，则重载OpenResty
-            $reload = shell_exec('/etc/init.d/nginx reload');
+            shell_exec('systemctl reload nginx');
             $res['data'] = 'OpenResty主配置已保存';
             return response()->json($res);
         }
@@ -162,7 +162,7 @@ class OpenrestyController extends Controller
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = file_get_contents('/www/log/nginx_error.log');
+        $res['data'] = file_get_contents('/www/wwwlogs/nginx_error.log');
         //如果data为换行符，则令返回空
         if ($res['data'] == "\n") {
             $res['data'] = '';
@@ -174,7 +174,7 @@ class OpenrestyController extends Controller
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
-        shell_exec('echo "" > /www/log/nginx_error.log');
+        shell_exec('echo "" > /www/wwwlogs/nginx_error.log');
         return response()->json($res);
     }
 

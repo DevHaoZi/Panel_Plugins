@@ -1,0 +1,21 @@
+{
+    "name": "panel/mysql",
+    "description": "mysql plugin for haozi linux panel",
+    "type": "project",
+    "license": "GPLv3",
+    "autoload": {
+        "psr-4": {
+            "Plugins\\Mysql\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "耗子",
+            "email": "i@haozi.net"
+        }
+    ],
+    "require": {},
+    "config": {
+        "optimize-autoloader": true
+    }
+}

@@ -2,7 +2,7 @@
 /**
  * Name: OpenResty插件
  * Author: 耗子
- * Date: 2022-10-15
+ * Date: 2022-11-02
  */
 
 use Illuminate\Support\Facades\Route;
