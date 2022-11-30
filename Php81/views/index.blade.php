@@ -1,7 +1,7 @@
 <!--
 Name: PHP-8.1管理器
 Author: 耗子
-Date: 2022-11-21
+Date: 2022-11-30
 -->
 <title>PHP-8.1</title>
 <div class="layui-fluid" id="component-tabs">
@@ -13,6 +13,7 @@ Date: 2022-11-21
                     <div class="layui-tab">
                         <ul class="layui-tab-title">
                             <li class="layui-this">运行状态</li>
+                            <li>拓展管理</li>
                             <li>配置修改</li>
                             <li>负载状态</li>
                             <li>运行日志</li>
@@ -21,13 +22,25 @@ Date: 2022-11-21
                         <div class="layui-tab-content">
                             <div class="layui-tab-item layui-show">
                                 <blockquote id="php81-status" class="layui-elem-quote layui-quote-nm">当前状态：<span
-                                        class="layui-badge layui-bg-black">获取中</span></blockquote>
+                                            class="layui-badge layui-bg-black">获取中</span></blockquote>
                                 <div class="layui-btn-container" style="padding-top: 30px;">
                                     <button id="php81-start" class="layui-btn">启动</button>
                                     <button id="php81-stop" class="layui-btn layui-btn-danger">停止</button>
                                     <button id="php81-restart" class="layui-btn layui-btn-warm">重启</button>
                                     <button id="php81-reload" class="layui-btn layui-btn-normal">重载</button>
                                 </div>
+                            </div>
+                            <div class="layui-tab-item">
+                                <table id="php81-extension" lay-filter="php81-extension"></table>
+                                <!-- 操作按钮模板 -->
+                                <script type="text/html" id="php81-extension-control">
+                                    @{{#  console.log(d); }}
+                                    @{{#  if(d.control.installed == true){ }}
+                                    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="uninstall">卸载</a>
+                                    @{{#  } else{ }}
+                                    <a class="layui-btn layui-btn-xs" lay-event="install">安装</a>
+                                    @{{#  } }}
+                                </script>
                             </div>
                             <div class="layui-tab-item">
                                 <blockquote class="layui-elem-quote">此处修改的是PHP-8.1主配置文件，如果你不了解各参数的含义，请不要随意修改！<br>
@@ -169,7 +182,7 @@ Date: 2022-11-21
                 }
                 $('#php81-config-editor').text(result.data);
                 php81_config_editor = ace.edit("php81-config-editor", {
-                    mode: "ace/mode/nginx",
+                    mode: "ace/mode/ini",
                     selectionStyle: "text"
                 });
             }
@@ -189,13 +202,90 @@ Date: 2022-11-21
         });
         element.render();
 
+        // 获取php81扩展并渲染
+        table.render({
+            elem: '#php81-extension'
+            , url: '/api/plugin/php81/getExtensionList'
+            , cols: [[
+                {field: 'slug', hide: true, title: 'Slug', sort: true}
+                , {field: 'name', width: '20%', title: '拓展名'}
+                , {field: 'describe', width: '70%', title: '描述'}
+                , {
+                    field: 'control',
+                    title: '操作',
+                    templet: '#php81-extension-control',
+                    fixed: 'right',
+                    align: 'left'
+                }
+            ]]
+            , page: false
+            , text: {
+                none: '暂无拓展'
+            }
+            , done: function () {
+                //element.render('progress');
+            }
+        });
+        // 工具条
+        table.on('tool(php81-extension)', function (obj) {
+            let data = obj.data;
+            if (obj.event === 'install') {
+                layer.confirm('确定安装该拓展吗？', function (index) {
+                    layer.close(index);
+                    admin.req({
+                        url: '/api/plugin/php81/installExtension',
+                        type: 'POST',
+                        data: {
+                            slug: data.slug
+                        }
+                        , success: function (res) {
+                            if (res.code === 0) {
+                                table.reload('php81-extension');
+                                layer.msg('安装：' + data.name + ' 成功加入任务队列', {
+                                    icon: 1,
+                                    time: 1000
+                                });
+                            } else {
+                                layer.msg(res.msg, {icon: 2, time: 1000});
+                            }
+                        }
+                        , error: function (xhr, status, error) {
+                            console.log('耗子Linux面板：ajax请求出错，错误' + error);
+                        }
+                    });
+                });
+            } else if (obj.event === 'uninstall') {
+                layer.confirm('确定卸载该拓展吗？', function (index) {
+                    layer.close(index);
+                    admin.req({
+                        url: '/api/plugin/php81/uninstallExtension',
+                        type: 'POST',
+                        data: {
+                            slug: data.slug
+                        }
+                        , success: function (res) {
+                            if (res.code === 0) {
+                                table.reload('php81-extension');
+                                layer.msg('卸载：' + data.name + ' 成功加入任务队列', {icon: 1, time: 1000});
+                            } else {
+                                layer.msg(res.msg, {icon: 2, time: 1000});
+                            }
+                        }
+                        , error: function (xhr, status, error) {
+                            console.log('耗子Linux面板：ajax请求出错，错误' + error);
+                        }
+                    });
+                });
+            }
+        });
+
         // 事件监听
         $('#php81-start').click(function () {
             layer.confirm('确定要启动PHP-8.1吗？', {
                 btn: ['启动', '取消']
             }, function () {
                 admin.req({
-                    url: "/api/plugin/php81/restart"
+                    url: "/api/plugin/php81/start"
                     , method: 'get'
                     , success: function (result) {
                         if (result.code !== 0) {
@@ -206,8 +296,8 @@ Date: 2022-11-21
                             layer.alert(result.data);
                             return false;
                         }
-                        layer.alert('PHP-8.1启动成功！');
                         admin.events.refresh();
+                        layer.alert('PHP-8.1启动成功！');
                     }
                     , error: function (xhr, status, error) {
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
@@ -222,7 +312,7 @@ Date: 2022-11-21
                 btn: ['重启', '取消']
             }, function () {
                 admin.req({
-                    url: "/api/plugin/php81/restart"
+                    url: "/api/plugin/php81/stop"
                     , method: 'get'
                     , success: function (result) {
                         if (result.code !== 0) {
@@ -233,8 +323,8 @@ Date: 2022-11-21
                             layer.alert(result.data);
                             return false;
                         }
-                        layer.alert('PHP-8.1停止成功！');
                         admin.events.refresh();
+                        layer.alert('PHP-8.1停止成功！');
                     }
                     , error: function (xhr, status, error) {
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
@@ -260,8 +350,8 @@ Date: 2022-11-21
                             layer.alert(result.data);
                             return false;
                         }
-                        layer.alert('PHP-8.1重启成功！');
                         admin.events.refresh();
+                        layer.alert('PHP-8.1重启成功！');
                     }
                     , error: function (xhr, status, error) {
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)

@@ -2,7 +2,7 @@
 /**
  * Name: Mysql插件控制器
  * Author:耗子
- * Date: 2022-11-21
+ * Date: 2022-11-30
  */
 
 namespace Plugins\Mysql\Controllers;
@@ -11,16 +11,18 @@ use App\Http\Controllers\Controller;
 
 // HTTP
 use App\Models\Setting;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 
 // Filesystem
 use Illuminate\Filesystem\Filesystem;
+use Illuminate\Validation\ValidationException;
 
 class MysqlController extends Controller
 {
 
-    public function status()
+    public function status(): JsonResponse
     {
         $command = 'systemctl status mysqld';
         $result = shell_exec($command);
@@ -36,7 +38,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function start()
+    public function start(): JsonResponse
     {
         $command = 'systemctl start mysqld';
         shell_exec($command);
@@ -48,7 +50,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function stop()
+    public function stop(): JsonResponse
     {
         $command = 'systemctl stop mysqld';
         shell_exec($command);
@@ -60,7 +62,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function restart()
+    public function restart(): JsonResponse
     {
         $command = 'systemctl restart mysqld';
         shell_exec($command);
@@ -72,7 +74,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function reload()
+    public function reload(): JsonResponse
     {
         $command = 'systemctl reload mysqld';
         shell_exec($command);
@@ -84,7 +86,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function getConfig()
+    public function getConfig(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -92,25 +94,23 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function saveConfig()
+    public function saveConfig(Request $request): JsonResponse
     {
-        $res['code'] = 1;
-        $res['msg'] = '待修复功能';
+        $res['code'] = 0;
+        $res['msg'] = 'success';
         // 获取配置内容
-        $config = Request::post('config');
+        $config = $request->input('config');
         // 备份一份旧配置
-        /*shell_exec('cp /etc/my.cnf /etc/my.cnf.bak');
+        shell_exec('cp /etc/my.cnf /etc/my.cnf.bak');
         // 写入配置
-        //file_put_contents('/etc/my.cnf', $config);
-        // 由于read only，改为使用shell命令
-        shell_exec('echo "'.$config.'" > /etc/my.cnf');
+        file_put_contents('/etc/my.cnf', $config);
         // 重载MySQL
         shell_exec('systemctl reload mysqld');
-        $res['data'] = 'MySQL主配置已保存';*/
+        $res['data'] = 'MySQL主配置已保存';
         return response()->json($res);
     }
 
-    public function load()
+    public function load(): JsonResponse
     {
         $mysqlRootPassword = Setting::query()->where('name', 'mysql_root_password')->value('value');
         // 判断是否设置了MySQL密码
@@ -127,7 +127,7 @@ class MysqlController extends Controller
         // 使用正则匹配Uptime的值
         preg_match('/Uptime\s+\|\s+(\d+)\s+\|/', $raw_status, $matches);
         $res['data'][0]['value'] = $matches[1].'s';
-        $res['data'][1]['name'] = '每秒查询';
+        $res['data'][1]['name'] = '总查询次数';
         // 使用正则匹配Queries的值
         preg_match('/Queries\s+\|\s+(\d+)\s+\|/', $raw_status, $matches);
         $res['data'][1]['value'] = $matches[1];
@@ -209,7 +209,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function errorLog()
+    public function errorLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -221,7 +221,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function cleanErrorLog()
+    public function cleanErrorLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -229,7 +229,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function slowLog()
+    public function slowLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -241,7 +241,7 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
-    public function cleanSlowLog()
+    public function cleanSlowLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -249,4 +249,459 @@ class MysqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 获取配置信息
+     */
+    public function getSettings(): JsonResponse
+    {
+        $settings = Setting::query()->where('name', 'like', 'mysql%')->pluck('value', 'name')->toArray();
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $settings;
+        return response()->json($res);
+    }
+
+    /**
+     * 保存配置信息
+     */
+    public function saveSettings(Request $request): JsonResponse
+    {
+        $newPassword = $request->input('mysql_root_password');
+        $oldPassword = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        if ($oldPassword != $newPassword) {
+            shell_exec('mysql -uroot -p'.$oldPassword.' -e "ALTER USER \'root\'@\'localhost\' IDENTIFIED BY \''.$newPassword.'\';"');
+            shell_exec('mysql -uroot -p'.$oldPassword.' -e "flush privileges;"');
+            Setting::query()->where('name', 'mysql_root_password')->update(['value' => $newPassword]);
+        }
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 获取数据库列表
+     */
+    public function getDatabases(): JsonResponse
+    {
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        $rawDatabases = shell_exec("mysql -uroot -p{$password} -e 'show databases'");
+        // 格式化数据
+        $databases = explode("\n", $rawDatabases);
+        array_shift($databases);
+        array_pop($databases);
+        // 去除系统数据库
+        $systemDatabases = ['information_schema', 'mysql', 'performance_schema', 'sys'];
+        $databases = array_diff($databases, $systemDatabases);
+        // 重新排序
+        $databases = array_values($databases);
+        // 重新组装数据
+        $databases = array_map(function ($database) {
+            return ['name' => $database];
+        }, $databases);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $databases;
+        return response()->json($res);
+    }
+
+    /**
+     * 添加数据库
+     */
+    public function addDatabase(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'name' => 'required|max:255',
+                'username' => 'required|max:255',
+                'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        shell_exec("mysql -u root -p".$password." -e \"CREATE DATABASE IF NOT EXISTS ".$credentials['name']." DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;\" 2>&1");
+        shell_exec("mysql -u root -p".$password." -e \"CREATE USER '".$credentials['username']."'@'localhost' IDENTIFIED BY '".$credentials['password']."';\"");
+        shell_exec("mysql -u root -p".$password." -e \"GRANT ALL PRIVILEGES ON ".$credentials['name'].".* TO '".$credentials['username']."'@'localhost';\"");
+        shell_exec("mysql -u root -p".$password." -e \"flush privileges;\"");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 删除数据库
+     */
+    public function deleteDatabase(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'name' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        shell_exec("mysql -u root -p".$password." -e \"DROP DATABASE ".$credentials['name'].";\" 2>&1");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 获取备份列表
+     */
+    public function getBackupList(): JsonResponse
+    {
+        $backupPath = '/www/backup/mysql';
+        // 判断备份目录是否存在
+        if (!is_dir($backupPath)) {
+            mkdir($backupPath, 0644, true);
+        }
+        $backupFiles = scandir($backupPath);
+        $backupFiles = array_diff($backupFiles, ['.', '..']);
+        $backupFiles = array_values($backupFiles);
+        $backupFiles = array_map(function ($backupFile) {
+            return [
+                'backup' => $backupFile,
+                'size' => round(filesize('/www/backup/mysql/'.$backupFile) / 1024 / 1024, 2),
+            ];
+        }, $backupFiles);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $backupFiles;
+        return response()->json($res);
+    }
+
+    /**
+     * 创建备份
+     */
+    public function createBackup(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'name' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        $backupPath = '/www/backup/mysql';
+        // 判断备份目录是否存在
+        if (!is_dir($backupPath)) {
+            mkdir($backupPath, 0644, true);
+        }
+        $backupFile = $backupPath.'/'.$credentials['name'].'_'.date('YmdHis').'.sql';
+        shell_exec("mysqldump -u root -p".$password." ".$credentials['name']." > ".$backupFile." 2>&1");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 上传备份
+     */
+    public function uploadBackup(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'file' => 'required|file',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $file = $request->file('file');
+        $backupPath = '/www/backup/mysql';
+
+        // 判断备份目录是否存在
+        if (!is_dir($backupPath)) {
+            mkdir($backupPath, 0644, true);
+        }
+        $backupFile = $backupPath.'/'.$file->getClientOriginalName();
+        $file->move($backupPath, $file->getClientOriginalName());
+
+        // 返回文件名
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $file->getClientOriginalName();
+        return response()->json($res);
+    }
+
+    /**
+     * 恢复备份
+     */
+    public function restoreBackup(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'name' => 'required|max:255',
+                'backup' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        $backupPath = '/www/backup/mysql';
+        // 判断备份目录是否存在
+        if (!is_dir($backupPath)) {
+            mkdir($backupPath, 0644, true);
+        }
+        $backupFile = $backupPath.'/'.$credentials['backup'];
+        // 判断备份文件是否存在
+        if (!is_file($backupFile)) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '备份文件不存在',
+            ], 200);
+        }
+
+        shell_exec("mysql -u root -p".$password." ".$credentials['name']." < ".$backupFile." 2>&1");
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 删除备份
+     */
+    public function deleteBackup(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'backup' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $backupPath = '/www/backup/mysql';
+        // 判断备份目录是否存在
+        if (!is_dir($backupPath)) {
+            mkdir($backupPath, 0644, true);
+        }
+        $backupFile = $backupPath.'/'.$credentials['backup'];
+        // 判断备份文件是否存在
+        if (!is_file($backupFile)) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '备份文件不存在',
+            ], 200);
+        }
+
+        unlink($backupFile);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 获取数据库用户列表
+     */
+    public function getUsers(): JsonResponse
+    {
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        $rawUsers = shell_exec("mysql -uroot -p{$password} -e 'select user,host from mysql.user'");
+        // 格式化数据
+        $users = explode("\n", $rawUsers);
+        array_shift($users);
+        array_pop($users);
+        // 进一步格式化数据
+        $users = array_map(function ($user) {
+            $user = explode("\t", $user);
+            $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+            // 删除系统用户
+            if ($user[0] == 'root' || $user[0] == 'mysql.sys' || $user[0] == 'mysql.infoschema' || $user[0] == 'mysql.session') {
+                return '';
+            }
+            // 获取授权信息
+            $rawPrivileges = shell_exec("mysql -uroot -p{$password} -e 'show grants for ".$user[0]."@".$user[1]."'");
+            // 格式化数据
+            $privilegesArr = explode("\n", $rawPrivileges);
+            array_shift($privilegesArr);
+            array_pop($privilegesArr);
+            // 进一步格式化数据
+            $privileges = '';
+            foreach ($privilegesArr as $k => $privilege) {
+                // 截取GRANT 和 TO之间的内容
+                $privilege = substr($privilege, 6, strpos($privilege, ' TO') - 6);
+                if ($k == 0) {
+                    $privileges .= $privilege;
+                } else {
+                    $privileges .= ' | '.$privilege;
+                }
+
+            }
+            return [
+                'username' => $user[0],
+                'host' => $user[1],
+                'privileges' => $privileges
+            ];
+        }, $users);
+        // 去除空值
+        $users = array_filter($users);
+        // 重新排序
+        $users = array_values($users);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $users;
+        return response()->json($res);
+    }
+
+    /**
+     * 添加数据库用户
+     */
+    public function addUser(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'username' => 'required|max:255',
+                'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
+                'database' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        shell_exec("mysql -u root -p".$password." -e \"CREATE USER '".$credentials['username']."'@'localhost' IDENTIFIED BY '".$credentials['password']."';\"");
+        shell_exec("mysql -u root -p".$password." -e \"GRANT ALL PRIVILEGES ON ".$credentials['database'].".* TO '".$credentials['username']."'@'localhost';\"");
+        shell_exec("mysql -u root -p".$password." -e \"flush privileges;\"");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 删除数据库用户
+     */
+    public function deleteUser(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'username' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        shell_exec("mysql -u root -p".$password." -e \"DROP USER '".$credentials['username']."'@'localhost';\"");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 修改数据库用户密码
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'username' => 'required|max:255',
+                'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        shell_exec("mysql -u root -p".$password." -e \"ALTER USER '".$credentials['username']."'@'localhost' IDENTIFIED BY '".$credentials['password']."';\"");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 修改数据库用户授权
+     */
+    public function changePrivileges(Request $request): JsonResponse
+    {
+        // 消毒数据
+        try {
+            $credentials = $this->validate($request, [
+                'username' => 'required|max:255',
+                'database' => 'required|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'code' => 1,
+                'msg' => '参数错误：'.$e->getMessage(),
+                'errors' => $e->errors()
+            ], 200);
+        }
+
+        // 判断是否在操作root用户
+        if ($credentials['username'] == 'root') {
+            return response()->json([
+                'code' => 1,
+                'msg' => '请不要花样做死',
+            ], 200);
+        }
+
+        $password = Setting::query()->where('name', 'mysql_root_password')->value('value');
+        // 撤销权限
+        shell_exec("mysql -u root -p".$password." -e \"REVOKE ALL PRIVILEGES ON *.* FROM '".$credentials['username']."'@'localhost';\"");
+        // 授权
+        shell_exec("mysql -u root -p".$password." -e \"GRANT ALL PRIVILEGES ON ".$credentials['database'].".* TO '".$credentials['username']."'@'localhost';\"");
+
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
 }

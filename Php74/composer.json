@@ -1,0 +1,21 @@
+{
+    "name": "panel/php74",
+    "description": "php74 plugin for haozi linux panel",
+    "type": "project",
+    "license": "GPLv3",
+    "autoload": {
+        "psr-4": {
+            "Plugins\\Php74\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "耗子",
+            "email": "i@haozi.net"
+        }
+    ],
+    "require": {},
+    "config": {
+        "optimize-autoloader": true
+    }
+}

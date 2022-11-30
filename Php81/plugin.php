@@ -2,7 +2,7 @@
 /**
  * Name: PHP8.1插件
  * Author: 耗子
- * Date: 2022-11-21
+ * Date: 2022-11-30
  */
 
 use Illuminate\Support\Facades\Route;
@@ -30,5 +30,8 @@ app('router')->group([
     Route::get('cleanSlowLog', [Php81Controller::class, 'cleanSlowLog']);
     Route::get('restart', [Php81Controller::class, 'restart']);
     Route::get('reload', [Php81Controller::class, 'reload']);
+    Route::get('getExtensionList', [Php81Controller::class, 'getExtensionList']);
+    Route::post('installExtension', [Php81Controller::class, 'installExtension']);
+    Route::post('uninstallExtension', [Php81Controller::class, 'uninstallExtension']);
 });
 

@@ -1,0 +1,21 @@
+{
+    "name": "panel/php80",
+    "description": "php80 plugin for haozi linux panel",
+    "type": "project",
+    "license": "GPLv3",
+    "autoload": {
+        "psr-4": {
+            "Plugins\\Php80\\": "./"
+        }
+    },
+    "authors": [
+        {
+            "name": "耗子",
+            "email": "i@haozi.net"
+        }
+    ],
+    "require": {},
+    "config": {
+        "optimize-autoloader": true
+    }
+}

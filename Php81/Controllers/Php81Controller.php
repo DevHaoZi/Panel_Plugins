@@ -2,24 +2,24 @@
 /**
  * Name: Php81插件控制器
  * Author:耗子
- * Date: 2022-11-21
+ * Date: 2022-11-30
  */
 
 namespace Plugins\Php81\Controllers;
 
 use App\Http\Controllers\Controller;
 
-// HTTP
-use App\Models\Setting;
+use App\Jobs\ProcessShell;
+use App\Models\Task;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Request;
-// Filesystem
-use Illuminate\Filesystem\Filesystem;
 
 class Php81Controller extends Controller
 {
 
-    public function status()
+    public function status(): JsonResponse
     {
         $command = 'systemctl status php-fpm-81';
         $result = shell_exec($command);
@@ -35,7 +35,7 @@ class Php81Controller extends Controller
         return response()->json($res);
     }
 
-    public function restart()
+    public function restart(): JsonResponse
     {
         $command = 'systemctl restart php-fpm-81';
         shell_exec($command);
@@ -47,7 +47,7 @@ class Php81Controller extends Controller
         return response()->json($res);
     }
 
-    public function reload()
+    public function reload(): JsonResponse
     {
         $command = 'systemctl reload php-fpm-81';
         shell_exec($command);
@@ -59,7 +59,7 @@ class Php81Controller extends Controller
         return response()->json($res);
     }
 
-    public function getConfig()
+    public function getConfig(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -67,12 +67,12 @@ class Php81Controller extends Controller
         return response()->json($res);
     }
 
-    public function saveConfig()
+    public function saveConfig(Request $request): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
         // 获取配置内容
-        $config = Request::post('config');
+        $config = $request->input('config');
         // 写入配置
         file_put_contents('/www/server/php/81/etc/php.ini', $config);
         // 重载PHP-8.1
@@ -84,20 +84,6 @@ class Php81Controller extends Controller
     public function load()
     {
         $raw_status = HTTP::get('http://127.0.0.1/phpfpm_81_status')->body();
-        /*pool:                 www
-process manager:      dynamic
-start time:           21/Nov/2022:15:37:00 +0800
-start since:          22693
-accepted conn:        2
-listen queue:         0
-max listen queue:     0
-listen queue len:     0
-idle processes:       19
-active processes:     1
-total processes:      20
-max active processes: 1
-max children reached: 0
-slow requests:        0*/
         $res['data'][0]['name'] = '应用池';
         // 正则匹配pool
         preg_match('/pool:\s+(.*)/', $raw_status, $matches);
@@ -180,7 +166,7 @@ slow requests:        0*/
     /**
      * 慢日志
      */
-    public function slowLog()
+    public function slowLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -195,7 +181,7 @@ slow requests:        0*/
     /**
      * 清空慢日志
      */
-    public function cleanSlowLog()
+    public function cleanSlowLog(): JsonResponse
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -203,4 +189,154 @@ slow requests:        0*/
         return response()->json($res);
     }
 
+    /**
+     * 获取拓展列表
+     */
+    public function getExtensionList(): JsonResponse
+    {
+        // 获取远程拓展列表
+        $remoteExtensionList = self::getRemoteExtension();
+
+        // 获取本地拓展列表
+        $rawExtensionList = shell_exec('php-81 -m');
+        $rawExtensionList = explode("\n", $rawExtensionList);
+        $extensionList = array_map(function ($item) {
+            if (str_contains($item, '[') || empty($item)) {
+                return '';
+            }
+            return $item;
+        }, $rawExtensionList);
+        $extensionList = array_flip(array_filter($extensionList));
+
+        // 处理数据
+        $data = [];
+        foreach ($remoteExtensionList as $k => $extension) {
+            $data[$k] = $extension;
+            // 去除不需要的字段
+            unset($data[$k]['install']);
+            unset($data[$k]['uninstall']);
+            unset($data[$k]['update']);
+            if (isset($extensionList[$extension['slug']])) {
+                $data[$k]['control']['installed'] = true;
+            } else {
+                $data[$k]['control']['installed'] = false;
+            }
+        }
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $data;
+        return response()->json($res);
+    }
+
+    /**
+     * 安装拓展
+     */
+    public function installExtension(Request $request): JsonResponse
+    {
+        $slug = $request->input('slug');
+        $remoteExtensionList = self::getRemoteExtension();
+        $extensionData = [];
+        $check = false;
+
+        // 查找拓展
+        foreach ($remoteExtensionList as $k => $item) {
+            if ($item['slug'] == $slug) {
+                $extensionData = $item;
+                $check = true;
+                break;
+            }
+        }
+
+        // 检查是否存在
+        if (!$check) {
+            $res['code'] = 1;
+            $res['msg'] = '拓展不存在';
+            return response()->json($res);
+        }
+
+        // 入库等待安装
+        $task = new Task();
+        $task->name = '安装PHP-81拓展 '.$extensionData['name'];
+        $task->shell = $extensionData['install'];
+        $task->status = 'waiting';
+        $task->log = '/tmp/'.$extensionData['slug'].'.log';
+        $task->save();
+        // 塞入队列
+        ProcessShell::dispatch($task->id)->delay(1);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = '任务添加成功';
+
+        return response()->json($res);
+    }
+
+    /**
+     * 卸载拓展
+     */
+    public function uninstallExtension(Request $request): JsonResponse
+    {
+        $slug = $request->input('slug');
+        $remoteExtensionList = self::getRemoteExtension();
+        $extensionData = [];
+        $check = false;
+
+        // 查找拓展
+        foreach ($remoteExtensionList as $k => $item) {
+            if ($item['slug'] == $slug) {
+                $extensionData = $item;
+                $check = true;
+                break;
+            }
+        }
+
+        // 检查是否存在
+        if (!$check) {
+            $res['code'] = 1;
+            $res['msg'] = '拓展不存在';
+            return response()->json($res);
+        }
+
+        // 入库等待安装
+        $task = new Task();
+        $task->name = '卸载PHP-81拓展 '.$extensionData['name'];
+        $task->shell = $extensionData['uninstall'];
+        $task->status = 'waiting';
+        $task->log = '/tmp/'.$extensionData['slug'].'.log';
+        $task->save();
+        // 塞入队列
+        ProcessShell::dispatch($task->id)->delay(1);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = '任务添加成功';
+
+        return response()->json($res);
+    }
+
+    /**
+     * 获取远程拓展列表
+     */
+    private function getRemoteExtension($cache = true)
+    {
+        // 判断刷新缓存
+        if (!$cache) {
+            Cache::forget('php81ExtensionList');
+        }
+        if (!Cache::has('php81ExtensionList')) {
+            return Cache::remember('php81ExtensionList', 3600, function () {
+                $response = Http::get('https://api.panel.haozi.xyz/api/phpExtension/list', ['version' => '81']);
+                // 判断请求是否成功，如果不成功则抛出异常
+                if ($response->failed()) {
+                    return response()->json(['code' => 1, 'msg' => '获取拓展列表失败']);
+                }
+                // 判断返回的JSON数据中code是否为0，如果不为0则抛出异常
+                if (!$response->json('code') == 0) {
+                    return response()->json(['code' => 1, 'msg' => '获取拓展列表失败']);
+                }
+                return $response->json('data');
+            });
+        } else {
+            // 从缓存中获取access_token
+            return Cache::get('php81ExtensionList');
+        }
+    }
 }
