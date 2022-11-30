@@ -10,7 +10,7 @@ namespace Plugins\Redis\Controllers;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 
 class RedisController extends Controller
 {
@@ -83,7 +83,15 @@ class RedisController extends Controller
     {
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = @file_get_contents('/etc/redis/redis.conf');
+        if (file_exists('/etc/redis/redis.conf')) {
+            $res['data'] = file_get_contents('/etc/redis/redis.conf');
+        } else {
+            if (file_exists('/etc/redis.conf')) {
+                $res['data'] = file_get_contents('/etc/redis.conf');
+            } else {
+                $res['data'] = '未找到Redis配置文件，Redis 可能已损坏';
+            }
+        }
         return response()->json($res);
     }
 
@@ -94,7 +102,17 @@ class RedisController extends Controller
         // 获取配置内容
         $config = $request->input('config');
         // 写入配置
-        file_put_contents('/etc/redis/redis.conf', $config);
+        if (file_exists('/etc/redis/redis.conf')) {
+            file_put_contents('/etc/redis/redis.conf', $config);
+        } else {
+            if (file_exists('/etc/redis.conf')) {
+                file_put_contents('/etc/redis.conf', $config);
+            } else {
+                $res['code'] = 1;
+                $res['msg'] = '未找到Redis配置文件，Redis 可能已损坏';
+                return response()->json($res);
+            }
+        }
         // 重载
         shell_exec('systemctl reload redis');
         $res['data'] = 'Redis主配置已保存';
