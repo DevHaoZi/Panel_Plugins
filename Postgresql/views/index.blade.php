@@ -72,7 +72,7 @@ Date: 2022-11-30
                                     提示：Ctrl+F 搜索关键字，Ctrl+S 保存，Ctrl+H 查找替换！
                                 </blockquote>
                                 <div id="postgresql-config-editor"
-                                     style="width: -webkit-fill-available; height: 600px;"></div>
+                                     style="height: 600px;"></div>
                                 <div class="layui-btn-container" style="padding-top: 30px;">
                                     <button id="postgresql-config-save" class="layui-btn">保存</button>
                                 </div>
@@ -82,7 +82,7 @@ Date: 2022-11-30
                                     提示：Ctrl+F 搜索关键字，Ctrl+S 保存，Ctrl+H 查找替换！
                                 </blockquote>
                                 <div id="postgresql-user-config-editor"
-                                     style="width: -webkit-fill-available; height: 600px;"></div>
+                                     style="height: 600px;"></div>
                                 <div class="layui-btn-container" style="padding-top: 30px;">
                                     <button id="postgresql-user-config-save" class="layui-btn">保存</button>
                                 </div>
