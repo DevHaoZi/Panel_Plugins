@@ -1,7 +1,7 @@
 <!--
 Name: PHP-8.1管理器
 Author: 耗子
-Date: 2022-11-30
+Date: 2022-12-02
 -->
 <title>PHP-8.1</title>
 <div class="layui-fluid" id="component-tabs">
@@ -34,7 +34,6 @@ Date: 2022-11-30
                                 <table id="php81-extension" lay-filter="php81-extension"></table>
                                 <!-- 操作按钮模板 -->
                                 <script type="text/html" id="php81-extension-control">
-                                    @{{#  console.log(d); }}
                                     @{{#  if(d.control.installed == true){ }}
                                     <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="uninstall">卸载</a>
                                     @{{#  } else{ }}

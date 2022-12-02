@@ -1,7 +1,7 @@
 <!--
 Name: PostgreSQL管理器 - 添加数据库
 Author: 耗子
-Date: 2022-11-30
+Date: 2022-12-02
 -->
 <script type="text/html" template lay-done="layui.data.sendParams(d.params)">
     <form class="layui-form" action="" lay-filter="add-postgresql-database-form">
@@ -49,7 +49,6 @@ Date: 2022-11-30
 
             // 提交
             form.on('submit(add-postgresql-database-submit)', function (data) {
-                console.log(data);
                 admin.req({
                     url: "/api/plugin/postgresql/addDatabase"
                     , method: 'post'

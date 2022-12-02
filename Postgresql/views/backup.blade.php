@@ -14,7 +14,7 @@ Date: 2022-12-02
 <script type="text/html" id="postgresql-database-backup-bar">
     <div class="layui-btn-container">
         <button class="layui-btn layui-btn-sm" lay-event="backup_database">备份数据库</button>
-        <button class="layui-btn layui-btn-sm" id="upload_backup">上传备份</button>
+        <button class="layui-btn layui-btn-sm" id="upload_postgresql_backup">上传备份</button>
     </div>
 </script>
 <!-- 备份右侧管理 -->
@@ -24,7 +24,6 @@ Date: 2022-12-02
 </script>
 <script>
     layui.data.sendParams = function (params) {
-        console.log(params);
         layui.use(['admin', 'form', 'laydate', 'code'], function () {
             var $ = layui.$
                 , admin = layui.admin
@@ -48,7 +47,7 @@ Date: 2022-12-02
                 }
                 , done: function (res, curr, count) {
                     upload.render({
-                        elem: '#upload_backup'
+                        elem: '#upload_postgresql_backup'
                         , url: '/api/plugin/postgresql/uploadBackup'
                         , accept: 'file'
                         , exts: 'sql'
@@ -71,7 +70,6 @@ Date: 2022-12-02
             });
             // 头工具栏事件
             table.on('toolbar(postgresql-backup-list)', function (obj) {
-                console.log(obj);
                 if (obj.event === 'backup_database') {
                     index = layer.msg('正在备份数据库，请稍等...', {
                         icon: 16
@@ -101,7 +99,6 @@ Date: 2022-12-02
             });
             // 行工具事件
             table.on('tool(postgresql-backup-list)', function (obj) {
-                console.log(obj);
                 let data = obj.data;
                 if (obj.event === 'del') {
                     layer.confirm('确定要删除数据库备份 <b style="color: red;">' + data.backup + '</b> 吗？', function (index) {

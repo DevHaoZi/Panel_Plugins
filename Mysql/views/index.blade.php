@@ -1,7 +1,7 @@
 <!--
 Name: MySQL管理器
 Author: 耗子
-Date: 2022-11-27
+Date: 2022-12-02
 -->
 <title>MySQL</title>
 <div class="layui-fluid" id="component-tabs">
@@ -213,7 +213,6 @@ Date: 2022-11-27
         });
         // 头工具栏事件
         table.on('toolbar(mysql-database-list)', function (obj) {
-            console.log(obj);
             if (obj.event === 'add_database') {
                 admin.popup({
                     title: '新建数据库'
@@ -230,7 +229,6 @@ Date: 2022-11-27
         });
         // 行工具事件
         table.on('tool(mysql-database-list)', function (obj) {
-            console.log(obj);
             let data = obj.data;
             if (obj.event === 'del') {
                 layer.confirm('高风险操作，确定要删除数据库 <b style="color: red;">'+data.name+'</b> 吗？', function (index) {
@@ -289,7 +287,6 @@ Date: 2022-11-27
         });
         // 头工具栏事件
         table.on('toolbar(mysql-user-list)', function (obj) {
-            console.log(obj);
             if (obj.event === 'add_user') {
                 admin.popup({
                     title: '新建用户'
@@ -306,7 +303,6 @@ Date: 2022-11-27
         });
         // 行工具事件
         table.on('tool(mysql-user-list)', function (obj) {
-            console.log(obj);
             let data = obj.data;
             if (obj.event === 'del') {
                 layer.confirm('高风险操作，确定要删除用户 <b style="color: red;">'+data.username+'</b> 吗？', function (index) {

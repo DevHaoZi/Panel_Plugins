@@ -1,7 +1,7 @@
 <!--
 Name: phpMyAdmin管理器
 Author: 耗子
-Date: 2022-11-30
+Date: 2022-12-02
 -->
 <title>phpMyAdmin</title>
 <div class="layui-fluid" id="component-tabs">
@@ -37,7 +37,6 @@ Date: 2022-11-30
                     return false;
                 }
                 // 获取当前域名
-                console.log(window.location)
                 let hostname = window.location.hostname;
                 // 拼接phpmyadmin访问地址
                 let phpmyadmin_url = 'http://' + hostname + ':888/' + result.data;
