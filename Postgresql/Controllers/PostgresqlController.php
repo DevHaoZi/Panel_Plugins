@@ -131,10 +131,18 @@ class PostgresqlController extends Controller
 
     public function load(): JsonResponse
     {
+        // 判断PostgreSQL是否已关闭
+        $command = 'systemctl status postgresql-15';
+        $result = shell_exec($command);
+        if (str_contains($result, 'inactive')) {
+            $res['code'] = 1;
+            $res['msg'] = 'PostgreSQL 已停止运行';
+            return response()->json($res);
+        }
         $res['code'] = 0;
         $res['msg'] = 'success';
         $res['data'][0]['name'] = '启动时间';
-        $res['data'][0]['value'] = shell_exec('echo "select pg_postmaster_start_time();"|su - postgres -c "psql"|sed -n 3p');
+        $res['data'][0]['value'] = Carbon::create(shell_exec('echo "select pg_postmaster_start_time();"|su - postgres -c "psql"|sed -n 3p'))->toDateTimeString();
         $res['data'][1]['name'] = '进程PID';
         $res['data'][1]['value'] = shell_exec('echo "select pg_backend_pid();"|su - postgres -c "psql"|sed -n 3p');
         $res['data'][2]['name'] = '进程数';
@@ -274,7 +282,7 @@ class PostgresqlController extends Controller
         $backupFiles = array_map(function ($backupFile) {
             return [
                 'backup' => $backupFile,
-                'size' => round(filesize('/www/backup/postgresql/'.$backupFile) / 1024 / 1024, 2),
+                'size' => formatBytes(filesize('/www/backup/postgresql/'.$backupFile)),
             ];
         }, $backupFiles);
         $res['code'] = 0;

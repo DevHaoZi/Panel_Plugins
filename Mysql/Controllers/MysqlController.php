@@ -119,6 +119,15 @@ class MysqlController extends Controller
             $res['msg'] = 'MySQL root密码错误';
             return response()->json($res);
         }
+        // 判断MySQL是否已关闭
+        $command = 'systemctl status mysqld';
+        $result = shell_exec($command);
+        if (str_contains($result, 'inactive')) {
+            $res['code'] = 1;
+            $res['msg'] = 'MySQL 已停止运行';
+            return response()->json($res);
+        }
+
         $raw_status = shell_exec('mysqladmin -uroot -p'.$mysqlRootPassword.' extended-status 2>&1');
 
         $res['code'] = 0;
@@ -146,11 +155,11 @@ class MysqlController extends Controller
         $res['data'][5]['name'] = '发送';
         // 使用正则匹配Bytes_sent的值
         preg_match('/Bytes_sent\s+\|\s+(\d+)\s+\|/', $raw_status, $matches);
-        $res['data'][5]['value'] = $matches[1];
+        $res['data'][5]['value'] = formatBytes($matches[1]);
         $res['data'][6]['name'] = '接收';
         // 使用正则匹配Bytes_received的值
         preg_match('/Bytes_received\s+\|\s+(\d+)\s+\|/', $raw_status, $matches);
-        $res['data'][6]['value'] = $matches[1];
+        $res['data'][6]['value'] = formatBytes($matches[1]);
         $res['data'][7]['name'] = '活动连接数';
         // 使用正则匹配Threads_connected的值
         preg_match('/Threads_connected\s+\|\s+(\d+)\s+\|/', $raw_status, $matches);
@@ -377,7 +386,7 @@ class MysqlController extends Controller
         $backupFiles = array_map(function ($backupFile) {
             return [
                 'backup' => $backupFile,
-                'size' => round(filesize('/www/backup/mysql/'.$backupFile) / 1024 / 1024, 2),
+                'size' => formatBytes(filesize('/www/backup/mysql/'.$backupFile)),
             ];
         }, $backupFiles);
         $res['code'] = 0;

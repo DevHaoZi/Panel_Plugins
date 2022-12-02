@@ -1,7 +1,7 @@
 <!--
 Name: PostgreSQL管理器 - 数据库备份
 Author: 耗子
-Date: 2022-11-30
+Date: 2022-12-02
 -->
 <script type="text/html" template lay-done="layui.data.sendParams(d.params)">
     <div class="layui-row">
@@ -31,7 +31,6 @@ Date: 2022-11-30
                 , layer = layui.layer
                 , table = layui.table
                 , upload = layui.upload;
-            console.log(params);
 
             // 渲染表格
             table.render({
@@ -53,7 +52,14 @@ Date: 2022-11-30
                         , url: '/api/plugin/postgresql/uploadBackup'
                         , accept: 'file'
                         , exts: 'sql'
+                        , before: function (obj) {
+                            index = layer.msg('正在上传备份文件，可能需要较长时间，请勿操作...', {
+                                icon: 16
+                                , time: 0
+                            });
+                        }
                         , done: function (res) {
+                            layer.close(index);
                             layer.msg('上传成功！', {icon: 1});
                             table.reload('postgresql-backup-list');
                         }

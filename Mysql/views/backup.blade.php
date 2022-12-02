@@ -53,7 +53,14 @@ Date: 2022-11-28
                         , url: '/api/plugin/mysql/uploadBackup'
                         , accept: 'file'
                         , exts: 'sql'
+                        , before: function (obj) {
+                            index = layer.msg('正在上传备份文件，可能需要较长时间，请勿操作...', {
+                                icon: 16
+                                , time: 0
+                            });
+                        }
                         , done: function (res) {
+                            layer.close(index);
                             layer.msg('上传成功！', {icon: 1});
                             table.reload('mysql-backup-list');
                         }
