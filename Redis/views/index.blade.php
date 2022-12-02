@@ -114,7 +114,7 @@ Date: 2022-11-30
                 btn: ['启动', '取消']
             }, function () {
                 admin.req({
-                    url: "/api/plugin/redis/restart"
+                    url: "/api/plugin/redis/start"
                     , method: 'get'
                     , success: function (result) {
                         if (result.code !== 0) {
@@ -133,15 +133,15 @@ Date: 2022-11-30
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消启动');
             });
         });
         $('#redis-stop').click(function () {
             layer.confirm('停止Redis将导致使用Redis的网站无法访问，是否继续停止？', {
-                btn: ['重启', '取消']
+                btn: ['停止', '取消']
             }, function () {
                 admin.req({
-                    url: "/api/plugin/redis/restart"
+                    url: "/api/plugin/redis/stop"
                     , method: 'get'
                     , success: function (result) {
                         if (result.code !== 0) {
@@ -160,7 +160,7 @@ Date: 2022-11-30
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消停止');
             });
         });
         $('#redis-restart').click(function () {

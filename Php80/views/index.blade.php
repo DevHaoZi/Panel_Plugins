@@ -303,12 +303,12 @@ Date: 2022-12-02
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消启动');
             });
         });
         $('#php80-stop').click(function () {
             layer.confirm('停止PHP-8.0将导致使用PHP-8.0的网站无法访问，是否继续停止？', {
-                btn: ['重启', '取消']
+                btn: ['停止', '取消']
             }, function () {
                 admin.req({
                     url: "/api/plugin/php80/stop"
@@ -330,7 +330,7 @@ Date: 2022-12-02
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消停止');
             });
         });
         $('#php80-restart').click(function () {

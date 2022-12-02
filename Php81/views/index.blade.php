@@ -303,12 +303,12 @@ Date: 2022-12-02
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消启动');
             });
         });
         $('#php81-stop').click(function () {
             layer.confirm('停止PHP-8.1将导致使用PHP-8.1的网站无法访问，是否继续停止？', {
-                btn: ['重启', '取消']
+                btn: ['停止', '取消']
             }, function () {
                 admin.req({
                     url: "/api/plugin/php81/stop"
@@ -330,7 +330,7 @@ Date: 2022-12-02
                     }
                 });
             }, function () {
-                layer.msg('取消重启');
+                layer.msg('取消停止');
             });
         });
         $('#php81-restart').click(function () {

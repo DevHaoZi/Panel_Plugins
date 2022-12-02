@@ -121,6 +121,16 @@ class RedisController extends Controller
 
     public function load(): JsonResponse
     {
+        $command = 'systemctl status redis';
+        $result = shell_exec($command);
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        if (str_contains($result, 'inactive')) {
+            $res['code'] = 1;
+            $res['msg'] = 'Redis 已停止运行';
+            return response()->json($res);
+        }
+
         $infoRaw = shell_exec('redis-cli info');
         // 处理数据
         $info = explode(PHP_EOL, $infoRaw);
@@ -139,11 +149,11 @@ class RedisController extends Controller
         $data[2]['name'] = '连接的客户端数';
         $data[2]['value'] = $dataRaw['connected_clients'];
         $data[3]['name'] = '已分配的内存总量';
-        $data[3]['value'] = $dataRaw['used_memory'];
+        $data[3]['value'] = $dataRaw['used_memory_human'];
         $data[4]['name'] = '占用内存总量';
-        $data[4]['value'] = $dataRaw['used_memory_rss'];
+        $data[4]['value'] = $dataRaw['used_memory_rss_human'];
         $data[5]['name'] = '占用内存峰值';
-        $data[5]['value'] = $dataRaw['used_memory_peak'];
+        $data[5]['value'] = $dataRaw['used_memory_peak_human'];
         $data[6]['name'] = '内存碎片比率';
         $data[6]['value'] = $dataRaw['mem_fragmentation_ratio'];
         $data[7]['name'] = '运行以来连接过的客户端的总数';
