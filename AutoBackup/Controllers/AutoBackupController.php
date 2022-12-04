@@ -11,8 +11,6 @@ use App\Http\Controllers\Api\CronsController;
 use App\Http\Controllers\Controller;
 
 use App\Models\Cron;
-use App\Models\Setting;
-use App\Models\Website;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
