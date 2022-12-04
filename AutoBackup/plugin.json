@@ -1,7 +1,7 @@
 {
   "name": "自动备份",
-  "author": "你大爷",
-  "describe": "自动备份",
+  "author": "耗子",
+  "describe": "自动备份网站/数据库到指定目录",
   "slug": "auto-backup",
   "version": "1.0.0"
 }
