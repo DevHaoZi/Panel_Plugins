@@ -1,5 +1,7 @@
 {
   "name": "phpMyAdmin",
+  "author": "耗子",
+  "describe": "",
   "slug": "phpmyadmin",
   "version": "5.2.0"
 }

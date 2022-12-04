@@ -1,5 +1,7 @@
 {
   "name": "Redis",
+  "author": "耗子",
+  "describe": "",
   "slug": "redis",
   "version": "6.2.7"
 }

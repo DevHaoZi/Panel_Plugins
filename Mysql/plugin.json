@@ -1,5 +1,7 @@
 {
   "name": "MySQL",
+  "author": "耗子",
+  "describe": "",
   "slug": "mysql",
   "version": "8.0.31"
 }

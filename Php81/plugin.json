@@ -1,5 +1,7 @@
 {
   "name": "PHP-8.1",
+  "author": "耗子",
+  "describe": "",
   "slug": "php81",
   "version": "8.1.13"
 }

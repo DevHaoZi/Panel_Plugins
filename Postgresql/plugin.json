@@ -1,5 +1,7 @@
 {
   "name": "PostgreSQL",
+  "author": "耗子",
+  "describe": "",
   "slug": "postgresql",
   "version": "15.1"
 }
