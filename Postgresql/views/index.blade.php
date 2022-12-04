@@ -161,7 +161,7 @@ Date: 2022-12-02
             if (obj.event === 'add_database') {
                 admin.popup({
                     title: '新建数据库'
-                    , area: ['40%', '40%']
+                    , area: ['600px', '300px']
                     , id: 'LAY-popup-postgresql-database-add'
                     , success: function (layer, index) {
                         view(this.id).render('plugin/postgresql/add_database', {
@@ -234,7 +234,7 @@ Date: 2022-12-02
             if (obj.event === 'add_user') {
                 admin.popup({
                     title: '新建用户'
-                    , area: ['40%', '40%']
+                    , area: ['600px', '300px']
                     , id: 'LAY-popup-postgresql-user-add'
                     , success: function (layer, index) {
                         view(this.id).render('plugin/postgresql/add_user', {

@@ -421,6 +421,10 @@ class MysqlController extends Controller
         }
         $backupFile = $backupPath.'/'.$credentials['name'].'_'.date('YmdHis').'.sql';
         shell_exec("mysqldump -u root -p".$password." ".$credentials['name']." > ".$backupFile." 2>&1");
+        // zip压缩
+        shell_exec('zip -r '.$backupFile.'.zip '.$backupFile.' 2>&1');
+        // 删除sql文件
+        unlink($backupFile);
 
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -494,6 +498,62 @@ class MysqlController extends Controller
                 'code' => 1,
                 'msg' => '备份文件不存在',
             ], 200);
+        }
+        // 判断备份文件是否经过压缩
+        if (pathinfo($backupFile, PATHINFO_EXTENSION) != 'sql') {
+            // 解压
+            switch (pathinfo($backupFile, PATHINFO_EXTENSION)) {
+                case 'zip':
+                    // 解压
+                    shell_exec('unzip '.$backupFile.' -d '.$backupPath.' 2>&1');
+                    // 获取解压后的sql文件
+                    $backupFile = substr($backupFile, 0, -4);
+                    break;
+                case 'gz':
+                    // 判断是否是tar.gz
+                    if (pathinfo(str_replace('.gz', '', $backupFile), PATHINFO_EXTENSION) == 'tar') {
+                        // 解压
+                        shell_exec('tar -zxvf '.$backupFile.' -C '.$backupPath.' 2>&1');
+                        // 获取解压后的sql文件
+                        $backupFile = substr($backupFile, 0, -7);
+                    } else {
+                        // 解压
+                        shell_exec('gzip -d '.$backupFile.' 2>&1');
+                        // 获取解压后的sql文件
+                        $backupFile = substr($backupFile, 0, -3);
+                    }
+                    break;
+                case 'bz2':
+                    // 解压
+                    shell_exec('bzip2 -d '.$backupFile.' 2>&1');
+                    // 获取解压后的sql文件
+                    $backupFile = substr($backupFile, 0, -4);
+                    break;
+                case 'tar':
+                    // 解压
+                    shell_exec('tar -xvf '.$backupFile.' -C '.$backupPath.' 2>&1');
+                    // 获取解压后的sql文件
+                    $backupFile = substr($backupFile, 0, -4);
+                    break;
+                case 'rar':
+                    // 解压
+                    shell_exec('unrar x '.$backupFile.' '.$backupPath.' 2>&1');
+                    // 获取解压后的sql文件
+                    $backupFile = substr($backupFile, 0, -4);
+                    break;
+                default:
+                    return response()->json([
+                        'code' => 1,
+                        'msg' => '备份文件格式错误',
+                    ], 200);
+            }
+            // 判断解压后的sql文件是否存在
+            if (!is_file($backupFile)) {
+                return response()->json([
+                    'code' => 1,
+                    'msg' => '无法被自动识别的压缩文件，请先解压后再上传',
+                ], 200);
+            }
         }
 
         shell_exec("mysql -u root -p".$password." ".$credentials['name']." < ".$backupFile." 2>&1");

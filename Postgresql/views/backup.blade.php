@@ -50,7 +50,7 @@ Date: 2022-12-02
                         elem: '#upload_postgresql_backup'
                         , url: '/api/plugin/postgresql/uploadBackup'
                         , accept: 'file'
-                        , exts: 'sql'
+                        , exts: 'sql|zip|rar|tar|gz|bz2'
                         , before: function (obj) {
                             index = layer.msg('正在上传备份文件，可能需要较长时间，请勿操作...', {
                                 icon: 16
