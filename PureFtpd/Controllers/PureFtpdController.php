@@ -75,6 +75,7 @@ class PureFtpdController extends Controller
         $password = $credentials['password'];
         $path = $credentials['path'];
 
+        shell_exec('chown -R www:www '.$path);
         shell_exec('echo "'.$password.PHP_EOL.$password.'" | pure-pw useradd '.$username.' -u www -d '.$path);
         shell_exec('pure-pw mkdb');
 
