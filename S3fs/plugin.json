@@ -1,0 +1,7 @@
+{
+  "name": "S3fs",
+  "author": "耗子",
+  "describe": "S3fs 通过 FUSE 挂载兼容 S3 标准的存储桶，例如Amazon S3、阿里云OSS、腾讯云COS、七牛云Kodo等（上游暂不支持RHEL9系）",
+  "slug": "s3fs",
+  "version": "1.0.0"
+}
