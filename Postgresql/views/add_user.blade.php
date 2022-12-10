@@ -1,7 +1,7 @@
 <!--
 Name: PostgreSQL管理器 - 添加用户
 Author: 耗子
-Date: 2022-12-02
+Date: 2022-12-09
 -->
 <script type="text/html" template lay-done="layui.data.sendParams(d.params)">
     <form class="layui-form" action="" lay-filter="add-postgresql-user-form">
@@ -49,14 +49,15 @@ Date: 2022-12-02
 
             // 提交
             form.on('submit(add-postgresql-user-submit)', function (data) {
+                index = layer.msg('正在提交...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/postgresql/addUser"
                     , method: 'post'
                     , data: data.field
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：用户添加失败，接口返回' + result);
-                            layer.msg('用户添加失败，请刷新重试！')
                             return false;
                         }
                         table.reload('postgresql-database-list');
@@ -67,7 +68,6 @@ Date: 2022-12-02
                             , btn: ['确定']
                             , yes: function (index) {
                                 layer.closeAll();
-                                //location.reload();
                             }
                         });
                     }

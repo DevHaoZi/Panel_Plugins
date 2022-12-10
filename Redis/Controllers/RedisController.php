@@ -1,8 +1,8 @@
 <?php
 /**
  * Name: Redis插件控制器
- * Author:耗子
- * Date: 2022-12-02
+ * Author: 耗子
+ * Date: 2022-12-10
  */
 
 namespace Plugins\Redis\Controllers;
@@ -15,70 +15,127 @@ use Illuminate\Http\Request;
 class RedisController extends Controller
 {
 
+    /**
+     * 获取运行状态
+     * @return JsonResponse
+     */
     public function status(): JsonResponse
     {
-        $command = 'systemctl status redis';
-        $result = shell_exec($command);
-
-        $res['code'] = 0;
-        $res['msg'] = 'success';
-        if (str_contains($result, 'inactive')) {
-            $res['data'] = 'stopped';
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status == 'active') {
+            $status = 1;
         } else {
-            $res['data'] = 'running';
+            $status = 0;
         }
 
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $status;
         return response()->json($res);
     }
 
+    /**
+     * 启动
+     * @return JsonResponse
+     */
     public function start(): JsonResponse
     {
-        $command = 'systemctl start redis';
-        shell_exec($command);
+        shell_exec('systemctl start redis');
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '启动服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'Redis已启动';
 
         return response()->json($res);
     }
 
+    /**
+     * 停止
+     * @return JsonResponse
+     */
     public function stop(): JsonResponse
     {
-        $command = 'systemctl stop redis';
-        shell_exec($command);
+        shell_exec('systemctl stop redis');
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'inactive') {
+            return response()->json(['code' => 1, 'msg' => '停止服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'Redis已停止';
 
         return response()->json($res);
     }
 
+    /**
+     * 重启
+     * @return JsonResponse
+     */
     public function restart(): JsonResponse
     {
-        $command = 'systemctl restart redis';
-        shell_exec($command);
+        shell_exec('systemctl restart redis');
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重启服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'Redis已重启';
 
         return response()->json($res);
     }
 
+    /**
+     * 重载
+     * @return JsonResponse
+     */
     public function reload(): JsonResponse
     {
-        $command = 'systemctl reload redis';
-        shell_exec($command);
+        shell_exec('systemctl reload redis');
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重载服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'Redis已重载';
 
         return response()->json($res);
     }
 
+    /**
+     * 获取配置文件
+     * @return JsonResponse
+     */
     public function getConfig(): JsonResponse
     {
         $res['code'] = 0;
@@ -95,6 +152,11 @@ class RedisController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 保存配置文件
+     * @param  Request  $request
+     * @return JsonResponse
+     */
     public function saveConfig(Request $request): JsonResponse
     {
         $res['code'] = 0;
@@ -119,13 +181,19 @@ class RedisController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 获取负载状态
+     * @return JsonResponse
+     */
     public function load(): JsonResponse
     {
-        $command = 'systemctl status redis';
-        $result = shell_exec($command);
-        $res['code'] = 0;
-        $res['msg'] = 'success';
-        if (str_contains($result, 'inactive')) {
+        $status = shell_exec('systemctl status redis | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
             $res['code'] = 1;
             $res['msg'] = 'Redis 已停止运行';
             return response()->json($res);

@@ -1,8 +1,8 @@
 <?php
 /**
  * Name: 自动备份插件控制器
- * Author:耗子
- * Date: 2022-12-04
+ * Author: 耗子
+ * Date: 2022-12-10
  */
 
 namespace Plugins\AutoBackup\Controllers;
@@ -107,10 +107,10 @@ EOF;
         $shellDir = '/www/server/cron/';
         $shellLogDir = '/www/server/cron/logs/';
         if (!is_dir($shellDir)) {
-            mkdir($shellDir, 0755, true);
+            mkdir($shellDir, 0700, true);
         }
         if (!is_dir($shellLogDir)) {
-            mkdir($shellLogDir, 0755, true);
+            mkdir($shellLogDir, 0600, true);
         }
         $shellFile = uniqid().'.sh';
         file_put_contents($shellDir.$shellFile, $shell);

@@ -1,7 +1,7 @@
 <!--
 Name: PHP-7.4管理器
 Author: 耗子
-Date: 2022-12-02
+Date: 2022-12-10
 -->
 <title>PHP-7.4</title>
 <div class="layui-fluid" id="component-tabs">
@@ -96,7 +96,7 @@ Date: 2022-12-02
                     console.log('耗子Linux面板：PHP-7.4运行状态获取失败，接口返回' + result);
                     return false;
                 }
-                if (result.data === "running") {
+                if (result.data) {
                     $('#php74-status').html('当前状态：<span class="layui-badge layui-bg-green">运行中</span>');
                 } else {
                     $('#php74-status').html('当前状态：<span class="layui-badge layui-bg-red">已停止</span>');
@@ -231,6 +231,7 @@ Date: 2022-12-02
             if (obj.event === 'install') {
                 layer.confirm('确定安装该拓展吗？', function (index) {
                     layer.close(index);
+                    index = layer.msg('请稍后...', {icon: 16, time: 0});
                     admin.req({
                         url: '/api/plugin/php74/installExtension',
                         type: 'POST',
@@ -239,6 +240,7 @@ Date: 2022-12-02
                         }
                         , success: function (res) {
                             if (res.code === 0) {
+                                layer.close(index);
                                 table.reload('php74-extension');
                                 layer.msg('安装：' + data.name + ' 成功加入任务队列', {
                                     icon: 1,
@@ -256,6 +258,7 @@ Date: 2022-12-02
             } else if (obj.event === 'uninstall') {
                 layer.confirm('确定卸载该拓展吗？', function (index) {
                     layer.close(index);
+                    index = layer.msg('请稍后...', {icon: 16, time: 0});
                     admin.req({
                         url: '/api/plugin/php74/uninstallExtension',
                         type: 'POST',
@@ -263,6 +266,7 @@ Date: 2022-12-02
                             slug: data.slug
                         }
                         , success: function (res) {
+                            layer.close(index);
                             if (res.code === 0) {
                                 table.reload('php74-extension');
                                 layer.msg('卸载：' + data.name + ' 成功加入任务队列', {icon: 1, time: 1000});
@@ -280,19 +284,17 @@ Date: 2022-12-02
 
         // 事件监听
         $('#php74-start').click(function () {
+            index = layer.msg('正在启动PHP-7.4，请稍后...', {icon: 16, time: 0});
             layer.confirm('确定要启动PHP-7.4吗？', {
                 btn: ['启动', '取消']
             }, function () {
                 admin.req({
                     url: "/api/plugin/php74/start"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-7.4启动失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -302,24 +304,20 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消启动');
             });
         });
         $('#php74-stop').click(function () {
             layer.confirm('停止PHP-7.4将导致使用PHP-7.4的网站无法访问，是否继续停止？', {
                 btn: ['停止', '取消']
             }, function () {
+                index = layer.msg('正在停止PHP-7.4，请稍后...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/php74/stop"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-7.4停止失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -329,24 +327,20 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消停止');
             });
         });
         $('#php74-restart').click(function () {
             layer.confirm('重启PHP-7.4将导致使用PHP-7.4的网站短时间无法访问，是否继续重启？', {
                 btn: ['重启', '取消']
             }, function () {
+                index = layer.msg('正在重启PHP-7.4，请稍后...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/php74/restart"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-7.4重启失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -356,22 +350,17 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消重启');
             });
         });
         $('#php74-reload').click(function () {
-            layer.msg('PHP-7.4重载中...');
+            index = layer.msg('正在重载PHP-7.4，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php74/reload"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-7.4重载失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('PHP-7.4重载成功！');
@@ -382,7 +371,7 @@ Date: 2022-12-02
             });
         });
         $('#php74-config-save').click(function () {
-            layer.msg('PHP-7.4配置保存中...');
+            index = layer.msg('正在保存配置，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php74/config"
                 , method: 'post'
@@ -390,12 +379,9 @@ Date: 2022-12-02
                     config: php74_config_editor.getValue()
                 }
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-7.4配置保存失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('PHP-7.4配置保存成功！');
@@ -406,19 +392,18 @@ Date: 2022-12-02
             });
         });
         $('#php74-clean-error-log').click(function () {
-            layer.msg('日志清空中...');
+            index = layer.msg('正在清空错误日志，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php74/cleanErrorLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-7.4日志清空失败，接口返回' + result);
                         return false;
                     }
+                    admin.events.refresh();
                     layer.msg('PHP-7.4日志已清空！');
-                    setTimeout(function () {
-                        admin.events.refresh();
-                    }, 1000);
                 }
                 , error: function (xhr, status, error) {
                     console.log('耗子Linux面板：ajax请求出错，错误' + error)
@@ -426,19 +411,17 @@ Date: 2022-12-02
             });
         });
         $('#php74-clean-slow-log').click(function () {
-            layer.msg('日志清空中...');
+            index = layer.msg('正在清空慢日志，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php74/cleanSlowLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-7.4慢日志清空失败，接口返回' + result);
                         return false;
                     }
+                    admin.events.refresh();
                     layer.msg('PHP-7.4慢日志已清空！');
-                    setTimeout(function () {
-                        admin.events.refresh();
-                    }, 1000);
                 }
                 , error: function (xhr, status, error) {
                     console.log('耗子Linux面板：ajax请求出错，错误' + error)

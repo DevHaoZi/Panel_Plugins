@@ -2,7 +2,7 @@
 /**
  * Name: PHP7.4插件
  * Author: 耗子
- * Date: 2022-11-30
+ * Date: 2022-12-10
  */
 
 use Illuminate\Support\Facades\Route;
@@ -21,15 +21,17 @@ app('router')->group([
     'middleware' => ['auth:sanctum'],
 ], function () {
     Route::get('status', [Php74Controller::class, 'status']);
+    Route::post('start', [Php74Controller::class, 'start']);
+    Route::post('stop', [Php74Controller::class, 'stop']);
+    Route::post('restart', [Php74Controller::class, 'restart']);
+    Route::post('reload', [Php74Controller::class, 'reload']);
     Route::get('load', [Php74Controller::class, 'load']);
     Route::get('errorLog', [Php74Controller::class, 'errorLog']);
     Route::get('slowLog', [Php74Controller::class, 'slowLog']);
     Route::get('config', [Php74Controller::class, 'getConfig']);
     Route::post('config', [Php74Controller::class, 'saveConfig']);
-    Route::get('cleanErrorLog', [Php74Controller::class, 'cleanErrorLog']);
-    Route::get('cleanSlowLog', [Php74Controller::class, 'cleanSlowLog']);
-    Route::get('restart', [Php74Controller::class, 'restart']);
-    Route::get('reload', [Php74Controller::class, 'reload']);
+    Route::post('cleanErrorLog', [Php74Controller::class, 'cleanErrorLog']);
+    Route::post('cleanSlowLog', [Php74Controller::class, 'cleanSlowLog']);
     Route::get('getExtensionList', [Php74Controller::class, 'getExtensionList']);
     Route::post('installExtension', [Php74Controller::class, 'installExtension']);
     Route::post('uninstallExtension', [Php74Controller::class, 'uninstallExtension']);

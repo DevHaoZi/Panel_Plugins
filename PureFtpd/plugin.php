@@ -25,6 +25,11 @@ app('router')->group([
     Route::post('addUser', [PureFtpdController::class, 'addUser']);
     Route::post('deleteUser', [PureFtpdController::class, 'deleteUser']);
     Route::post('changePassword', [PureFtpdController::class, 'changePassword']);
-    Route::post('getPort', [PureFtpdController::class, 'getPort']);
+    Route::get('getPort', [PureFtpdController::class, 'getPort']);
     Route::post('setPort', [PureFtpdController::class, 'setPort']);
+    Route::get('status', [PureFtpdController::class, 'status']);
+    Route::post('start', [PureFtpdController::class, 'start']);
+    Route::post('stop', [PureFtpdController::class, 'stop']);
+    Route::post('restart', [PureFtpdController::class, 'restart']);
+    Route::post('reload', [PureFtpdController::class, 'reload']);
 });

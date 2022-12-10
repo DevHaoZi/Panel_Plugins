@@ -1,7 +1,7 @@
 <!--
 Name: Redis管理器
 Author: 耗子
-Date: 2022-11-30
+Date: 2022-12-10
 -->
 <title>Redis</title>
 <div class="layui-fluid" id="component-tabs">
@@ -113,16 +113,14 @@ Date: 2022-11-30
             layer.confirm('确定要启动Redis吗？', {
                 btn: ['启动', '取消']
             }, function () {
+                index = layer.msg('正在启动Redis，请稍候...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/redis/start"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：Redis启动失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -132,24 +130,20 @@ Date: 2022-11-30
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消启动');
             });
         });
         $('#redis-stop').click(function () {
-            layer.confirm('停止Redis将导致使用Redis的网站无法访问，是否继续停止？', {
+            layer.confirm('停止Redis将导致使用Redis的网站出现异常，是否继续停止？', {
                 btn: ['停止', '取消']
             }, function () {
+                index = layer.msg('正在停止Redis，请稍候...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/redis/stop"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：Redis停止失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -159,24 +153,20 @@ Date: 2022-11-30
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消停止');
             });
         });
         $('#redis-restart').click(function () {
-            layer.confirm('重启Redis将导致使用Redis的网站短时间无法访问，是否继续重启？', {
+            layer.confirm('重启Redis将导致使用Redis的网站短时间出现异常，是否继续重启？', {
                 btn: ['重启', '取消']
             }, function () {
+                index = layer.msg('正在重启Redis，请稍候...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/redis/restart"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：Redis重启失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -186,22 +176,17 @@ Date: 2022-11-30
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消重启');
             });
         });
         $('#redis-reload').click(function () {
-            layer.msg('Redis重载中...');
+            index = layer.msg('正在重载Redis，请稍候...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/redis/reload"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：Redis重载失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('Redis重载成功！');
@@ -212,7 +197,7 @@ Date: 2022-11-30
             });
         });
         $('#redis-config-save').click(function () {
-            layer.msg('Redis配置保存中...');
+            index = layer.msg('正在保存Redis配置，请稍候...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/redis/config"
                 , method: 'post'
@@ -220,12 +205,9 @@ Date: 2022-11-30
                     config: redis_config_editor.getValue()
                 }
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：Redis配置保存失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('Redis配置保存成功！');

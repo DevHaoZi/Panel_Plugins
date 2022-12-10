@@ -24,17 +24,17 @@ app('router')->group([
     'middleware' => ['auth:sanctum'],
 ], function () {
     Route::get('status', [MysqlController::class, 'status']);
-    Route::get('start', [MysqlController::class, 'start']);
-    Route::get('stop', [MysqlController::class, 'stop']);
+    Route::post('start', [MysqlController::class, 'start']);
+    Route::post('stop', [MysqlController::class, 'stop']);
+    Route::post('restart', [MysqlController::class, 'restart']);
+    Route::post('reload', [MysqlController::class, 'reload']);
     Route::get('load', [MysqlController::class, 'load']);
     Route::get('errorLog', [MysqlController::class, 'errorLog']);
     Route::get('slowLog', [MysqlController::class, 'slowLog']);
     Route::get('config', [MysqlController::class, 'getConfig']);
     Route::post('config', [MysqlController::class, 'saveConfig']);
-    Route::get('cleanErrorLog', [MysqlController::class, 'cleanErrorLog']);
-    Route::get('cleanSlowLog', [MysqlController::class, 'cleanSlowLog']);
-    Route::get('restart', [MysqlController::class, 'restart']);
-    Route::get('reload', [MysqlController::class, 'reload']);
+    Route::post('cleanErrorLog', [MysqlController::class, 'cleanErrorLog']);
+    Route::post('cleanSlowLog', [MysqlController::class, 'cleanSlowLog']);
     Route::get('getSettings', [MysqlController::class, 'getSettings']);
     Route::post('saveSettings', [MysqlController::class, 'saveSettings']);
     Route::get('getDatabases', [MysqlController::class, 'getDatabases']);

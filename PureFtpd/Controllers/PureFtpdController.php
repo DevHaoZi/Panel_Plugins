@@ -1,7 +1,7 @@
 <?php
 /**
  * Name: Pure-Ftpd插件控制器
- * Author:耗子
+ * Author: 耗子
  * Date: 2022-12-07
  */
 
@@ -33,7 +33,6 @@ class PureFtpdController extends Controller
             // 去除最后一个空行
             array_pop($userRaw);
             $users = array_map(function ($item) {
-                //haozi /www/wwwroot/./
                 preg_match_all('/(\S+)\s+(\S+)/', $item, $matches);
                 return [
                     'username' => $matches[1][0],
@@ -74,9 +73,15 @@ class PureFtpdController extends Controller
         $username = $credentials['username'];
         $password = $credentials['password'];
         $path = $credentials['path'];
+        if (!str_starts_with($path, '/')) {
+            $path = '/'.$path;
+        }
+        if (!is_dir($path)) {
+            return response()->json(['code' => 1, 'msg' => '目录不存在']);
+        }
 
-        shell_exec('chown -R www:www '.$path);
-        shell_exec('echo "'.$password.PHP_EOL.$password.'" | pure-pw useradd '.$username.' -u www -d '.$path);
+        shell_exec('chown -R www:www '.escapeshellarg($path));
+        shell_exec('echo '.escapeshellarg($password.PHP_EOL.$password).' | pure-pw useradd '.escapeshellarg($username).' -u www -d '.escapeshellarg($path));
         shell_exec('pure-pw mkdb');
 
         // 返回结果
@@ -103,7 +108,7 @@ class PureFtpdController extends Controller
 
         $username = $credentials['username'];
 
-        shell_exec('pure-pw userdel '.$username);
+        shell_exec('pure-pw userdel '.escapeshellarg($username));
         shell_exec('pure-pw mkdb');
 
         // 返回结果
@@ -132,7 +137,7 @@ class PureFtpdController extends Controller
         $username = $credentials['username'];
         $password = $credentials['password'];
 
-        shell_exec('echo "'.$password.PHP_EOL.$password.'" | pure-pw passwd '.$username);
+        shell_exec('echo '.escapeshellarg($password.PHP_EOL.$password).' | pure-pw passwd '.escapeshellarg($username));
         shell_exec('pure-pw mkdb');
 
         // 返回结果
@@ -156,6 +161,8 @@ class PureFtpdController extends Controller
 
     /**
      * 设置pure-ftpd端口
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function setPort(Request $request): JsonResponse
     {
@@ -176,6 +183,124 @@ class PureFtpdController extends Controller
         shell_exec('firewall-cmd --reload');
         // 重启服务
         shell_exec('service pure-ftpd restart');
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 获取运行状态
+     * @return JsonResponse
+     */
+    public function status(): JsonResponse
+    {
+        $status = shell_exec('systemctl status pure-ftpd | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status == 'active') {
+            $status = 1;
+        } else {
+            $status = 0;
+        }
+
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $status;
+        return response()->json($res);
+    }
+
+    /**
+     * 启动
+     * @return JsonResponse
+     */
+    public function start(): JsonResponse
+    {
+        shell_exec('systemctl start pure-ftpd');
+        $status = shell_exec('systemctl status pure-ftpd | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '启动服务失败']);
+        }
+
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $status;
+        return response()->json($res);
+    }
+
+    /**
+     * 停止
+     * @return JsonResponse
+     */
+    public function stop(): JsonResponse
+    {
+        shell_exec('systemctl stop pure-ftpd');
+        $status = shell_exec('systemctl status pure-ftpd | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'inactive') {
+            return response()->json(['code' => 1, 'msg' => '停止服务失败']);
+        }
+
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 重启
+     * @return JsonResponse
+     */
+    public function restart(): JsonResponse
+    {
+        shell_exec('systemctl restart pure-ftpd');
+        $status = shell_exec('systemctl status pure-ftpd | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重启服务失败']);
+        }
+
+        // 返回结果
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        return response()->json($res);
+    }
+
+    /**
+     * 重载
+     * @return JsonResponse
+     */
+    public function reload(): JsonResponse
+    {
+        shell_exec('systemctl reload pure-ftpd');
+        $status = shell_exec('systemctl status pure-ftpd | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重载服务失败']);
+        }
+
         // 返回结果
         $res['code'] = 0;
         $res['msg'] = 'success';

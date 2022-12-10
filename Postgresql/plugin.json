@@ -1,7 +1,7 @@
 {
   "name": "PostgreSQL",
   "author": "耗子",
-  "describe": "",
+  "describe": "PostgreSQL 是开源的对象 - 关系数据库数据库管理系统，在类似 BSD 许可与 MIT 许可的 PostgreSQL 许可下发行。",
   "slug": "postgresql",
   "version": "15.1"
 }

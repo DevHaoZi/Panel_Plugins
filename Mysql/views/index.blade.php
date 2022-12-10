@@ -1,7 +1,7 @@
 <!--
 Name: MySQL管理器
 Author: 耗子
-Date: 2022-12-04
+Date: 2022-12-10
 -->
 <title>MySQL</title>
 <div class="layui-fluid" id="component-tabs">
@@ -25,7 +25,7 @@ Date: 2022-12-04
                                     <legend>运行状态</legend>
                                 </fieldset>
                                 <blockquote id="mysql-status" class="layui-elem-quote layui-quote-nm">当前状态：<span
-                                        class="layui-badge layui-bg-black">获取中</span></blockquote>
+                                            class="layui-badge layui-bg-black">获取中</span></blockquote>
                                 <div class="layui-btn-container" style="padding-top: 30px;">
                                     <button id="mysql-start" class="layui-btn">启动</button>
                                     <button id="mysql-stop" class="layui-btn layui-btn-danger">停止</button>
@@ -39,24 +39,29 @@ Date: 2022-12-04
                                     <div class="layui-form-item">
                                         <label class="layui-form-label" style="font-size: 13px;">root 密码</label>
                                         <div class="layui-input-inline">
-                                            <input type="text" name="mysql_root_password" value="获取中ing..." class="layui-input" disabled/>
+                                            <input type="text" name="mysql_root_password" value="获取中ing..."
+                                                   class="layui-input" disabled/>
                                         </div>
                                         <div class="layui-form-mid layui-word-aux">查看/修改MySQL的root密码</div>
                                     </div>
                                     <div class="layui-form-item">
                                         <div class="layui-input-block">
-                                            <button class="layui-btn layui-btn-sm" lay-submit lay-filter="mysql_setting_submit">确认修改</button>
+                                            <button class="layui-btn layui-btn-sm" lay-submit
+                                                    lay-filter="mysql_setting_submit">确认修改
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="layui-tab-item">
-                                <blockquote class="layui-elem-quote">面板仅集成了部分常用功能，如需更多功能，建议安装 phpMyAdmin 使用。
+                                <blockquote class="layui-elem-quote">面板仅集成了部分常用功能，如需更多功能，建议安装
+                                    phpMyAdmin 使用。
                                 </blockquote>
                                 <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
                                     <legend>数据库列表</legend>
                                 </fieldset>
-                                <table class="layui-hide" id="mysql-database-list" lay-filter="mysql-database-list"></table>
+                                <table class="layui-hide" id="mysql-database-list"
+                                       lay-filter="mysql-database-list"></table>
                                 <fieldset class="layui-elem-field layui-field-title" style="margin-top: 30px;">
                                     <legend>用户列表</legend>
                                 </fieldset>
@@ -64,7 +69,8 @@ Date: 2022-12-04
                                 <!-- 数据库顶部工具栏 -->
                                 <script type="text/html" id="mysql-database-list-bar">
                                     <div class="layui-btn-container">
-                                        <button class="layui-btn layui-btn-sm" lay-event="add_database">新建数据库</button>
+                                        <button class="layui-btn layui-btn-sm" lay-event="add_database">新建数据库
+                                        </button>
                                     </div>
                                 </script>
                                 <!-- 用户顶部工具栏 -->
@@ -80,7 +86,8 @@ Date: 2022-12-04
                                 </script>
                                 <!-- 用户右侧管理 -->
                                 <script type="text/html" id="mysql-user-list-control">
-                                    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="change_password">改密</a>
+                                    <a class="layui-btn layui-btn-normal layui-btn-xs"
+                                       lay-event="change_password">改密</a>
                                     <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
                                 </script>
                             </div>
@@ -142,7 +149,6 @@ Date: 2022-12-04
             , success: function (result) {
                 if (result.code !== 0) {
                     console.log('耗子Linux面板：系统信息获取失败，接口返回' + result);
-                    layer.msg('系统信息获取失败，请刷新重试！')
                     return false;
                 }
                 form.val("mysql_setting",
@@ -156,14 +162,15 @@ Date: 2022-12-04
         });
         // 提交修改
         form.on('submit(mysql_setting_submit)', function (data) {
+            index = layer.msg('请稍候...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/mysql/saveSettings"
                 , method: 'post'
                 , data: data.field
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：MySQL设置保存失败，接口返回' + result);
-                        layer.msg('MySQL设置保存失败，请刷新重试！')
                         return false;
                     }
                     layer.msg('修改成功！')
@@ -184,7 +191,7 @@ Date: 2022-12-04
                     console.log('耗子Linux面板：MySQL运行状态获取失败，接口返回' + result);
                     return false;
                 }
-                if (result.data === "running") {
+                if (result.data) {
                     $('#mysql-status').html('当前状态：<span class="layui-badge layui-bg-green">运行中</span>');
                 } else {
                     $('#mysql-status').html('当前状态：<span class="layui-badge layui-bg-red">已停止</span>');
@@ -206,10 +213,6 @@ Date: 2022-12-04
                 {field: 'name', title: '库名', fixed: 'left', unresize: true, sort: true}
                 , {fixed: 'right', title: '操作', toolbar: '#mysql-database-list-control', width: 150}
             ]]
-            /**
-             * TODO: 分页
-             */
-            //, page: true
         });
         // 头工具栏事件
         table.on('toolbar(mysql-database-list)', function (obj) {
@@ -219,8 +222,7 @@ Date: 2022-12-04
                     , area: ['600px', '300px']
                     , id: 'LAY-popup-mysql-database-add'
                     , success: function (layer, index) {
-                        view(this.id).render('plugin/mysql/add_database', {
-                        }).done(function () {
+                        view(this.id).render('plugin/mysql/add_database', {}).done(function () {
                             form.render(null, 'LAY-popup-mysql-database-add');
                         });
                     }
@@ -231,15 +233,16 @@ Date: 2022-12-04
         table.on('tool(mysql-database-list)', function (obj) {
             let data = obj.data;
             if (obj.event === 'del') {
-                layer.confirm('高风险操作，确定要删除数据库 <b style="color: red;">'+data.name+'</b> 吗？', function (index) {
+                layer.confirm('高风险操作，确定要删除数据库 <b style="color: red;">' + data.name + '</b> 吗？', function (index) {
+                    index = layui.msg('请稍候...', {icon: 16, time: 0});
                     admin.req({
                         url: "/api/plugin/mysql/deleteDatabase"
                         , method: 'post'
                         , data: data
                         , success: function (result) {
+                            layer.close(index);
                             if (result.code !== 0) {
                                 console.log('耗子Linux面板：数据库删除失败，接口返回' + result);
-                                layer.msg('数据库删除失败，请刷新重试！')
                                 return false;
                             }
                             obj.del();
@@ -280,10 +283,6 @@ Date: 2022-12-04
                 , {field: 'privileges', title: '权限'}
                 , {fixed: 'right', title: '操作', toolbar: '#mysql-user-list-control', width: 150}
             ]]
-            /**
-             * TODO: 分页
-             */
-            //, page: true
         });
         // 头工具栏事件
         table.on('toolbar(mysql-user-list)', function (obj) {
@@ -293,8 +292,7 @@ Date: 2022-12-04
                     , area: ['600px', '300px']
                     , id: 'LAY-popup-mysql-user-add'
                     , success: function (layer, index) {
-                        view(this.id).render('plugin/mysql/add_user', {
-                        }).done(function () {
+                        view(this.id).render('plugin/mysql/add_user', {}).done(function () {
                             form.render(null, 'LAY-popup-mysql-user-add');
                         });
                     }
@@ -305,15 +303,16 @@ Date: 2022-12-04
         table.on('tool(mysql-user-list)', function (obj) {
             let data = obj.data;
             if (obj.event === 'del') {
-                layer.confirm('高风险操作，确定要删除用户 <b style="color: red;">'+data.username+'</b> 吗？', function (index) {
+                layer.confirm('高风险操作，确定要删除用户 <b style="color: red;">' + data.username + '</b> 吗？', function (index) {
+                    index = layer.msg('正在提交...', {icon: 16, time: 0});
                     admin.req({
                         url: "/api/plugin/mysql/deleteUser"
                         , method: 'post'
                         , data: data
                         , success: function (result) {
+                            layer.close(index);
                             if (result.code !== 0) {
                                 console.log('耗子Linux面板：用户删除失败，接口返回' + result);
-                                layer.msg('用户删除失败，请刷新重试！')
                                 return false;
                             }
                             obj.del();
@@ -325,14 +324,14 @@ Date: 2022-12-04
                     });
                     layer.close(index);
                 });
-            }else if(obj.event === 'change_password'){
+            } else if (obj.event === 'change_password') {
                 // 弹出输入密码框
                 layer.prompt({
                     formType: 1
                     , title: '请输入新密码（8位以上大小写数字特殊符号混合）'
                 }, function (value, index) {
                     layer.close(index);
-                    layer.load(2);
+                    index = layer.msg('正在提交...', {icon: 16, time: 0});
                     // 发送请求
                     admin.req({
                         url: "/api/plugin/mysql/changePassword"
@@ -342,16 +341,14 @@ Date: 2022-12-04
                             password: value
                         }
                         , success: function (result) {
-                            layer.closeAll('loading');
+                            layer.close(index);
                             if (result.code !== 0) {
                                 console.log('耗子Linux面板：密码修改失败，接口返回' + result);
-                                layer.msg('密码修改失败，请刷新重试！')
                                 return false;
                             }
                             layer.alert('用户' + data.username + '密码修改成功！');
                         }
                         , error: function (xhr, status, error) {
-                            layer.closeAll('loading');
                             console.log('耗子Linux面板：ajax请求出错，错误' + error);
                         }
                     });
@@ -457,16 +454,14 @@ Date: 2022-12-04
             layer.confirm('确定要启动MySQL吗？', {
                 btn: ['启动', '取消']
             }, function () {
+                index = layer.msg('正在启动MySQL...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/mysql/start"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：MySQL启动失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -476,24 +471,20 @@ Date: 2022-12-04
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消启动');
             });
         });
         $('#mysql-stop').click(function () {
             layer.confirm('停止MySQL将导致使用MySQL的网站无法访问，是否继续停止？', {
                 btn: ['停止', '取消']
             }, function () {
+                index = layer.msg('正在停止MySQL...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/mysql/stop"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：MySQL停止失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -503,24 +494,20 @@ Date: 2022-12-04
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消停止');
             });
         });
         $('#mysql-restart').click(function () {
             layer.confirm('重启MySQL将导致使用MySQL的网站短时间无法访问，是否继续重启？', {
                 btn: ['重启', '取消']
             }, function () {
+                index = layer.msg('正在重启MySQL...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/mysql/restart"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：MySQL重启失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -530,24 +517,20 @@ Date: 2022-12-04
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消重启');
             });
         });
         $('#mysql-reload').click(function () {
-            layer.msg('MySQL重载中...');
+            index = layer.msg('正在重载MySQL...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/mysql/reload"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：MySQL重载失败，接口返回' + result);
                         return false;
                     }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
-                        return false;
-                    }
+                    admin.events.refresh();
                     layer.alert('MySQL重载成功！');
                 }
                 , error: function (xhr, status, error) {
@@ -556,7 +539,7 @@ Date: 2022-12-04
             });
         });
         $('#mysql-config-save').click(function () {
-            layer.msg('MySQL配置保存中...');
+            index = layer.msg('正在保存配置...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/mysql/config"
                 , method: 'post'
@@ -564,12 +547,9 @@ Date: 2022-12-04
                     config: mysql_config_editor.getValue()
                 }
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：MySQL配置保存失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('MySQL配置保存成功！');
@@ -580,11 +560,12 @@ Date: 2022-12-04
             });
         });
         $('#mysql-clean-error-log').click(function () {
-            layer.msg('错误日志清空中...');
+            index = layer.msg('正在清空错误日志...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/mysql/cleanErrorLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：MySQL错误日志清空失败，接口返回' + result);
                         return false;
@@ -600,11 +581,12 @@ Date: 2022-12-04
             });
         });
         $('#mysql-clean-slow-log').click(function () {
-            layer.msg('慢查询日志清空中...');
+            index = layer.msg('正在清空慢查询日志...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/mysql/cleanSlowLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：MySQL慢查询日志清空失败，接口返回' + result);
                         return false;

@@ -24,10 +24,10 @@ app('router')->group([
     'middleware' => ['auth:sanctum'],
 ], function () {
     Route::get('status', [PostgresqlController::class, 'status']);
-    Route::get('start', [PostgresqlController::class, 'start']);
-    Route::get('stop', [PostgresqlController::class, 'stop']);
-    Route::get('restart', [PostgresqlController::class, 'restart']);
-    Route::get('reload', [PostgresqlController::class, 'reload']);
+    Route::post('start', [PostgresqlController::class, 'start']);
+    Route::post('stop', [PostgresqlController::class, 'stop']);
+    Route::post('restart', [PostgresqlController::class, 'restart']);
+    Route::post('reload', [PostgresqlController::class, 'reload']);
     Route::get('load', [PostgresqlController::class, 'load']);
     Route::get('log', [PostgresqlController::class, 'log']);
     Route::get('config', [PostgresqlController::class, 'getConfig']);

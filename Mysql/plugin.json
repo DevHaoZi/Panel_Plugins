@@ -1,7 +1,7 @@
 {
   "name": "MySQL",
   "author": "耗子",
-  "describe": "",
+  "describe": "MySQL 是最流行的关系型数据库管理系统之一，Oracle 旗下产品。",
   "slug": "mysql",
   "version": "8.0.31"
 }

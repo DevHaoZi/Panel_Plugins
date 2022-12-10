@@ -52,11 +52,13 @@ Date: 2022-12-07
 
             // 提交
             form.on('submit(add-pure-ftpd-user-submit)', function (data) {
+                index = layer.msg('正在提交...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/pure-ftpd/addUser"
                     , method: 'post'
                     , data: data.field
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：Pure-Ftpd用户添加失败，接口返回' + result);
                             layer.msg('Pure-Ftpd用户添加失败，请刷新重试！')

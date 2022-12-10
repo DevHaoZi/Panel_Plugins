@@ -1,7 +1,7 @@
 <!--
 Name: 自动备份插件 - 添加备份任务
 Author: 耗子
-Date: 2022-12-04
+Date: 2022-12-10
 -->
 <script type="text/html" template lay-done="layui.data.sendParams(d.params)">
     <form class="layui-form" action="" lay-filter="add-auto-backup-form">
@@ -129,14 +129,15 @@ Date: 2022-12-04
 
             // 提交
             form.on('submit(add-auto-backup-submit)', function (data) {
+                index = layer.msg('正在提交...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/auto-backup/addTask"
                     , method: 'post'
                     , data: data.field
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：自动备份任务添加失败，接口返回' + result);
-                            layer.msg('自动备份任务添加失败，请刷新重试！')
                             return false;
                         }
                         table.reload('auto-backup-list');

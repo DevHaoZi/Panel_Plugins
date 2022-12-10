@@ -1,7 +1,7 @@
 <!--
 Name: MySQL管理器 - 添加数据库
 Author: 耗子
-Date: 2022-12-02
+Date: 2022-12-10
 -->
 <script type="text/html" template lay-done="layui.data.sendParams(d.params)">
     <form class="layui-form" action="" lay-filter="add-mysql-database-form">
@@ -49,11 +49,13 @@ Date: 2022-12-02
 
             // 提交
             form.on('submit(add-mysql-database-submit)', function (data) {
+                index = layer.msg('正在提交...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/mysql/addDatabase"
                     , method: 'post'
                     , data: data.field
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：数据库添加失败，接口返回' + result);
                             layer.msg('数据库添加失败，请刷新重试！')
@@ -67,7 +69,6 @@ Date: 2022-12-02
                             , btn: ['确定']
                             , yes: function (index) {
                                 layer.closeAll();
-                                //location.reload();
                             }
                         });
                     }

@@ -2,7 +2,7 @@
 /**
  * Name: PHP8.1插件
  * Author: 耗子
- * Date: 2022-11-30
+ * Date: 2022-12-10
  */
 
 use Illuminate\Support\Facades\Route;
@@ -21,15 +21,17 @@ app('router')->group([
     'middleware' => ['auth:sanctum'],
 ], function () {
     Route::get('status', [Php81Controller::class, 'status']);
+    Route::post('start', [Php81Controller::class, 'start']);
+    Route::post('stop', [Php81Controller::class, 'stop']);
+    Route::post('restart', [Php81Controller::class, 'restart']);
+    Route::post('reload', [Php81Controller::class, 'reload']);
     Route::get('load', [Php81Controller::class, 'load']);
     Route::get('errorLog', [Php81Controller::class, 'errorLog']);
     Route::get('slowLog', [Php81Controller::class, 'slowLog']);
     Route::get('config', [Php81Controller::class, 'getConfig']);
     Route::post('config', [Php81Controller::class, 'saveConfig']);
-    Route::get('cleanErrorLog', [Php81Controller::class, 'cleanErrorLog']);
-    Route::get('cleanSlowLog', [Php81Controller::class, 'cleanSlowLog']);
-    Route::get('restart', [Php81Controller::class, 'restart']);
-    Route::get('reload', [Php81Controller::class, 'reload']);
+    Route::post('cleanErrorLog', [Php81Controller::class, 'cleanErrorLog']);
+    Route::post('cleanSlowLog', [Php81Controller::class, 'cleanSlowLog']);
     Route::get('getExtensionList', [Php81Controller::class, 'getExtensionList']);
     Route::post('installExtension', [Php81Controller::class, 'installExtension']);
     Route::post('uninstallExtension', [Php81Controller::class, 'uninstallExtension']);

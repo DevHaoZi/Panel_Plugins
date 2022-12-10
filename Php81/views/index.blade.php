@@ -1,7 +1,7 @@
 <!--
 Name: PHP-8.1管理器
 Author: 耗子
-Date: 2022-12-02
+Date: 2022-12-10
 -->
 <title>PHP-8.1</title>
 <div class="layui-fluid" id="component-tabs">
@@ -96,7 +96,7 @@ Date: 2022-12-02
                     console.log('耗子Linux面板：PHP-8.1运行状态获取失败，接口返回' + result);
                     return false;
                 }
-                if (result.data === "running") {
+                if (result.data) {
                     $('#php81-status').html('当前状态：<span class="layui-badge layui-bg-green">运行中</span>');
                 } else {
                     $('#php81-status').html('当前状态：<span class="layui-badge layui-bg-red">已停止</span>');
@@ -231,6 +231,7 @@ Date: 2022-12-02
             if (obj.event === 'install') {
                 layer.confirm('确定安装该拓展吗？', function (index) {
                     layer.close(index);
+                    index = layer.msg('请稍后...', {icon: 16, time: 0});
                     admin.req({
                         url: '/api/plugin/php81/installExtension',
                         type: 'POST',
@@ -239,6 +240,7 @@ Date: 2022-12-02
                         }
                         , success: function (res) {
                             if (res.code === 0) {
+                                layer.close(index);
                                 table.reload('php81-extension');
                                 layer.msg('安装：' + data.name + ' 成功加入任务队列', {
                                     icon: 1,
@@ -256,6 +258,7 @@ Date: 2022-12-02
             } else if (obj.event === 'uninstall') {
                 layer.confirm('确定卸载该拓展吗？', function (index) {
                     layer.close(index);
+                    index = layer.msg('请稍后...', {icon: 16, time: 0});
                     admin.req({
                         url: '/api/plugin/php81/uninstallExtension',
                         type: 'POST',
@@ -263,6 +266,7 @@ Date: 2022-12-02
                             slug: data.slug
                         }
                         , success: function (res) {
+                            layer.close(index);
                             if (res.code === 0) {
                                 table.reload('php81-extension');
                                 layer.msg('卸载：' + data.name + ' 成功加入任务队列', {icon: 1, time: 1000});
@@ -280,19 +284,17 @@ Date: 2022-12-02
 
         // 事件监听
         $('#php81-start').click(function () {
+            index = layer.msg('正在启动PHP-8.1，请稍后...', {icon: 16, time: 0});
             layer.confirm('确定要启动PHP-8.1吗？', {
                 btn: ['启动', '取消']
             }, function () {
                 admin.req({
                     url: "/api/plugin/php81/start"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-8.1启动失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -302,24 +304,20 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消启动');
             });
         });
         $('#php81-stop').click(function () {
             layer.confirm('停止PHP-8.1将导致使用PHP-8.1的网站无法访问，是否继续停止？', {
                 btn: ['停止', '取消']
             }, function () {
+                index = layer.msg('正在停止PHP-8.1，请稍后...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/php81/stop"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-8.1停止失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -329,24 +327,20 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消停止');
             });
         });
         $('#php81-restart').click(function () {
             layer.confirm('重启PHP-8.1将导致使用PHP-8.1的网站短时间无法访问，是否继续重启？', {
                 btn: ['重启', '取消']
             }, function () {
+                index = layer.msg('正在重启PHP-8.1，请稍后...', {icon: 16, time: 0});
                 admin.req({
                     url: "/api/plugin/php81/restart"
-                    , method: 'get'
+                    , method: 'post'
                     , success: function (result) {
+                        layer.close(index);
                         if (result.code !== 0) {
                             console.log('耗子Linux面板：PHP-8.1重启失败，接口返回' + result);
-                            return false;
-                        }
-                        if (result.msg === 'error') {
-                            layer.alert(result.data);
                             return false;
                         }
                         admin.events.refresh();
@@ -356,22 +350,17 @@ Date: 2022-12-02
                         console.log('耗子Linux面板：ajax请求出错，错误' + error)
                     }
                 });
-            }, function () {
-                layer.msg('取消重启');
             });
         });
         $('#php81-reload').click(function () {
-            layer.msg('PHP-8.1重载中...');
+            index = layer.msg('正在重载PHP-8.1，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php81/reload"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-8.1重载失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('PHP-8.1重载成功！');
@@ -382,7 +371,7 @@ Date: 2022-12-02
             });
         });
         $('#php81-config-save').click(function () {
-            layer.msg('PHP-8.1配置保存中...');
+            index = layer.msg('正在保存配置，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php81/config"
                 , method: 'post'
@@ -390,12 +379,9 @@ Date: 2022-12-02
                     config: php81_config_editor.getValue()
                 }
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-8.1配置保存失败，接口返回' + result);
-                        return false;
-                    }
-                    if (result.msg === 'error') {
-                        layer.alert(result.data);
                         return false;
                     }
                     layer.alert('PHP-8.1配置保存成功！');
@@ -406,19 +392,18 @@ Date: 2022-12-02
             });
         });
         $('#php81-clean-error-log').click(function () {
-            layer.msg('日志清空中...');
+            index = layer.msg('正在清空错误日志，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php81/cleanErrorLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
+                    layer.close(index);
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-8.1日志清空失败，接口返回' + result);
                         return false;
                     }
+                    admin.events.refresh();
                     layer.msg('PHP-8.1日志已清空！');
-                    setTimeout(function () {
-                        admin.events.refresh();
-                    }, 1000);
                 }
                 , error: function (xhr, status, error) {
                     console.log('耗子Linux面板：ajax请求出错，错误' + error)
@@ -426,19 +411,17 @@ Date: 2022-12-02
             });
         });
         $('#php81-clean-slow-log').click(function () {
-            layer.msg('日志清空中...');
+            index = layer.msg('正在清空慢日志，请稍后...', {icon: 16, time: 0});
             admin.req({
                 url: "/api/plugin/php81/cleanSlowLog"
-                , method: 'get'
+                , method: 'post'
                 , success: function (result) {
                     if (result.code !== 0) {
                         console.log('耗子Linux面板：PHP-8.1慢日志清空失败，接口返回' + result);
                         return false;
                     }
+                    admin.events.refresh();
                     layer.msg('PHP-8.1慢日志已清空！');
-                    setTimeout(function () {
-                        admin.events.refresh();
-                    }, 1000);
                 }
                 , error: function (xhr, status, error) {
                     console.log('耗子Linux面板：ajax请求出错，错误' + error)

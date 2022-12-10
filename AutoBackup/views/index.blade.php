@@ -151,14 +151,15 @@ Date: 2022-12-04
             let data = obj.data;
             if (obj.event === 'del') {
                 layer.confirm('确定要删除 <b style="color: red;">' + data.name + '</b> 吗？', function (index) {
+                    index = layer.msg('请稍候...', {icon: 16, time: 0});
                     admin.req({
                         url: "/api/plugin/auto-backup/deleteTask"
                         , method: 'post'
                         , data: data
                         , success: function (result) {
+                            layer.close(index);
                             if (result.code !== 0) {
                                 console.log('耗子Linux面板：自动备份任务删除失败，接口返回' + result);
-                                layer.msg('自动备份任务删除失败，请刷新重试！')
                                 return false;
                             }
                             obj.del();

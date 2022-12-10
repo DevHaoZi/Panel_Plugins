@@ -1,8 +1,8 @@
 <?php
 /**
  * Name: PostgreSQL插件控制器
- * Author:耗子
- * Date: 2022-12-04
+ * Author: 耗子
+ * Date: 2022-12-09
  */
 
 namespace Plugins\Postgresql\Controllers;
@@ -17,70 +17,127 @@ use Illuminate\Validation\ValidationException;
 class PostgresqlController extends Controller
 {
 
+    /**
+     * 获取运行状态
+     * @return JsonResponse
+     */
     public function status(): JsonResponse
     {
-        $command = 'systemctl status postgresql-15';
-        $result = shell_exec($command);
-
-        $res['code'] = 0;
-        $res['msg'] = 'success';
-        if (str_contains($result, 'inactive')) {
-            $res['data'] = 'stopped';
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status == 'active') {
+            $status = 1;
         } else {
-            $res['data'] = 'running';
+            $status = 0;
         }
 
+        $res['code'] = 0;
+        $res['msg'] = 'success';
+        $res['data'] = $status;
+
         return response()->json($res);
     }
 
+    /**
+     * 启动
+     * @return JsonResponse
+     */
     public function start(): JsonResponse
     {
-        $command = 'systemctl start postgresql-15';
-        shell_exec($command);
+        shell_exec('systemctl start postgresql-15');
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '启动服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'PostgreSQL已启动';
 
         return response()->json($res);
     }
 
+    /**
+     * 停止
+     * @return JsonResponse
+     */
     public function stop(): JsonResponse
     {
-        $command = 'systemctl stop postgresql-15';
-        shell_exec($command);
+        shell_exec('systemctl stop postgresql-15');
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'inactive') {
+            return response()->json(['code' => 1, 'msg' => '停止服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'PostgreSQL已停止';
 
         return response()->json($res);
     }
 
+    /**
+     * 重启
+     * @return JsonResponse
+     */
     public function restart(): JsonResponse
     {
-        $command = 'systemctl restart postgresql-15';
-        shell_exec($command);
+        shell_exec('systemctl restart postgresql-15');
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重启服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'PostgreSQL已重启';
 
         return response()->json($res);
     }
 
+    /**
+     * 重载
+     * @return JsonResponse
+     */
     public function reload(): JsonResponse
     {
-        $command = 'systemctl reload postgresql-15';
-        shell_exec($command);
+        shell_exec('systemctl reload postgresql-15');
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => '重载服务失败']);
+        }
 
         $res['code'] = 0;
         $res['msg'] = 'success';
-        $res['data'] = 'PostgreSQL已重载';
 
         return response()->json($res);
     }
 
+    /**
+     * 获取配置文件
+     * @return JsonResponse
+     */
     public function getConfig(): JsonResponse
     {
         $res['code'] = 0;
@@ -89,6 +146,10 @@ class PostgresqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 获取用户配置文件
+     * @return JsonResponse
+     */
     public function getUserConfig(): JsonResponse
     {
         $res['code'] = 0;
@@ -97,6 +158,11 @@ class PostgresqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 保存配置文件
+     * @param  Request  $request
+     * @return JsonResponse
+     */
     public function saveConfig(Request $request): JsonResponse
     {
         $res['code'] = 0;
@@ -113,6 +179,11 @@ class PostgresqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 保存用户配置文件
+     * @param  Request  $request
+     * @return JsonResponse
+     */
     public function saveUserConfig(Request $request): JsonResponse
     {
         $res['code'] = 0;
@@ -129,15 +200,22 @@ class PostgresqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 获取负载状态
+     * @return JsonResponse
+     */
     public function load(): JsonResponse
     {
-        // 判断PostgreSQL是否已关闭
-        $command = 'systemctl status postgresql-15';
-        $result = shell_exec($command);
-        if (str_contains($result, 'inactive')) {
-            $res['code'] = 1;
-            $res['msg'] = 'PostgreSQL 已停止运行';
-            return response()->json($res);
+        // 判断PostgreSQL是否启动
+        shell_exec('systemctl restart postgresql-15');
+        $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
+        // 格式化掉换行符
+        $status = trim($status);
+        if (empty($status)) {
+            return response()->json(['code' => 1, 'msg' => '获取服务运行状态失败']);
+        }
+        if ($status != 'active') {
+            return response()->json(['code' => 1, 'msg' => 'PostgreSQL服务未启动']);
         }
         $res['code'] = 0;
         $res['msg'] = 'success';
@@ -155,6 +233,10 @@ class PostgresqlController extends Controller
         return response()->json($res);
     }
 
+    /**
+     * 获取日志
+     * @return JsonResponse
+     */
     public function log(): JsonResponse
     {
         $res['code'] = 0;
@@ -171,6 +253,7 @@ class PostgresqlController extends Controller
 
     /**
      * 获取数据库列表
+     * @return JsonResponse
      */
     public function getDatabases(): JsonResponse
     {
@@ -202,14 +285,16 @@ class PostgresqlController extends Controller
 
     /**
      * 添加数据库
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function addDatabase(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'name' => 'required|max:255',
-                'username' => 'required|max:255',
+                'name' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
+                'username' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
                 'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
             ]);
         } catch (ValidationException $e) {
@@ -225,7 +310,8 @@ class PostgresqlController extends Controller
         shell_exec('echo "GRANT ALL PRIVILEGES ON DATABASE '.$credentials['name'].' TO '.$credentials['username'].';"|su - postgres -c "psql"');
 
         // 写入用户配置
-        shell_exec('echo "host    '.$credentials['name'].'    '.$credentials['username'].'    127.0.0.1/32    scram-sha-256" >> /www/server/postgresql/15/pg_hba.conf');
+        $userConfig = 'host    '.$credentials['name'].'    '.$credentials['username'].'    127.0.0.1/32    scram-sha-256';
+        file_put_contents('/www/server/postgresql/15/pg_hba.conf', PHP_EOL.$userConfig, FILE_APPEND);
 
         // 重载
         shell_exec('systemctl reload postgresql-15');
@@ -237,13 +323,15 @@ class PostgresqlController extends Controller
 
     /**
      * 删除数据库
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function deleteDatabase(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'name' => 'required|max:255',
+                'name' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -268,6 +356,7 @@ class PostgresqlController extends Controller
 
     /**
      * 获取备份列表
+     * @return JsonResponse
      */
     public function getBackupList(): JsonResponse
     {
@@ -293,13 +382,15 @@ class PostgresqlController extends Controller
 
     /**
      * 创建备份
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function createBackup(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'name' => 'required|max:255',
+                'name' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -317,7 +408,7 @@ class PostgresqlController extends Controller
         $backupFile = $backupPath.'/'.$credentials['name'].'_'.date('YmdHis').'.sql';
         shell_exec('su - postgres -c "pg_dump '.$credentials['name'].'" > '.$backupFile.' 2>&1');
         // zip压缩
-        shell_exec('zip -r '.$backupFile.'.zip '.$backupFile.' 2>&1');
+        shell_exec('zip -r '.$backupFile.'.zip '.escapeshellarg($backupFile).' 2>&1');
         // 删除sql文件
         unlink($backupFile);
 
@@ -328,6 +419,8 @@ class PostgresqlController extends Controller
 
     /**
      * 上传备份
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function uploadBackup(Request $request): JsonResponse
     {
@@ -363,13 +456,15 @@ class PostgresqlController extends Controller
 
     /**
      * 恢复备份
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function restoreBackup(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'name' => 'required|max:255',
+                'name' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
                 'backup' => 'required|max:255',
             ]);
         } catch (ValidationException $e) {
@@ -399,7 +494,7 @@ class PostgresqlController extends Controller
             switch (pathinfo($backupFile, PATHINFO_EXTENSION)) {
                 case 'zip':
                     // 解压
-                    shell_exec('unzip '.$backupFile.' -d '.$backupPath.' 2>&1');
+                    shell_exec('unzip -o '.escapeshellarg($backupFile).' -d '.$backupPath.' 2>&1');
                     // 获取解压后的sql文件
                     $backupFile = substr($backupFile, 0, -4);
                     break;
@@ -407,31 +502,31 @@ class PostgresqlController extends Controller
                     // 判断是否是tar.gz
                     if (pathinfo(str_replace('.gz', '', $backupFile), PATHINFO_EXTENSION) == 'tar') {
                         // 解压
-                        shell_exec('tar -zxvf '.$backupFile.' -C '.$backupPath.' 2>&1');
+                        shell_exec('tar -zxvf '.escapeshellarg($backupFile).' -C '.$backupPath.' 2>&1');
                         // 获取解压后的sql文件
                         $backupFile = substr($backupFile, 0, -7);
                     } else {
                         // 解压
-                        shell_exec('gzip -d '.$backupFile.' 2>&1');
+                        shell_exec('gzip -d '.escapeshellarg($backupFile).' 2>&1');
                         // 获取解压后的sql文件
                         $backupFile = substr($backupFile, 0, -3);
                     }
                     break;
                 case 'bz2':
                     // 解压
-                    shell_exec('bzip2 -d '.$backupFile.' 2>&1');
+                    shell_exec('bzip2 -d '.escapeshellarg($backupFile).' 2>&1');
                     // 获取解压后的sql文件
                     $backupFile = substr($backupFile, 0, -4);
                     break;
                 case 'tar':
                     // 解压
-                    shell_exec('tar -xvf '.$backupFile.' -C '.$backupPath.' 2>&1');
+                    shell_exec('tar -xvf '.escapeshellarg($backupFile).' -C '.$backupPath.' 2>&1');
                     // 获取解压后的sql文件
                     $backupFile = substr($backupFile, 0, -4);
                     break;
                 case 'rar':
                     // 解压
-                    shell_exec('unrar x '.$backupFile.' '.$backupPath.' 2>&1');
+                    shell_exec('unrar x '.escapeshellarg($backupFile).' '.$backupPath.' 2>&1');
                     // 获取解压后的sql文件
                     $backupFile = substr($backupFile, 0, -4);
                     break;
@@ -450,7 +545,7 @@ class PostgresqlController extends Controller
             }
         }
 
-        shell_exec('su - postgres -c "psql '.$credentials['name'].'" < '.$backupFile.' 2>&1');
+        shell_exec('su - postgres -c "psql '.$credentials['name'].'" < '.escapeshellarg($backupFile).' 2>&1');
         $res['code'] = 0;
         $res['msg'] = 'success';
         return response()->json($res);
@@ -458,6 +553,8 @@ class PostgresqlController extends Controller
 
     /**
      * 删除备份
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function deleteBackup(Request $request): JsonResponse
     {
@@ -488,7 +585,7 @@ class PostgresqlController extends Controller
             ], 200);
         }
 
-        unlink($backupFile);
+        @unlink($backupFile);
         $res['code'] = 0;
         $res['msg'] = 'success';
         return response()->json($res);
@@ -496,6 +593,7 @@ class PostgresqlController extends Controller
 
     /**
      * 获取数据库用户列表
+     * @return JsonResponse
      */
     public function getUsers(): JsonResponse
     {
@@ -519,15 +617,17 @@ class PostgresqlController extends Controller
 
     /**
      * 添加数据库用户
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function addUser(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'username' => 'required|max:255',
+                'username' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
                 'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
-                'database' => 'required|max:255',
+                'database' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -541,7 +641,8 @@ class PostgresqlController extends Controller
         shell_exec('echo "GRANT ALL PRIVILEGES ON DATABASE '.$credentials['database'].' TO '.$credentials['username'].'; "|su - postgres -c "psql"');
 
         // 写入用户配置
-        shell_exec('echo "host    '.$credentials['database'].'    '.$credentials['username'].'    127.0.0.1/32    scram-sha-256" >> /www/server/postgresql/15/pg_hba.conf');
+        $userConfig = 'host    '.$credentials['database'].'    '.$credentials['username'].'    127.0.0.1/32    scram-sha-256';
+        file_put_contents('/www/server/postgresql/15/pg_hba.conf', PHP_EOL.$userConfig, FILE_APPEND);
         // 重载
         shell_exec('systemctl reload postgresql-15');
 
@@ -552,13 +653,15 @@ class PostgresqlController extends Controller
 
     /**
      * 删除数据库用户
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function deleteUser(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'username' => 'required|max:255',
+                'username' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
             ]);
         } catch (ValidationException $e) {
             return response()->json([
@@ -588,13 +691,15 @@ class PostgresqlController extends Controller
 
     /**
      * 修改数据库用户密码
+     * @param  Request  $request
+     * @return JsonResponse
      */
     public function changePassword(Request $request): JsonResponse
     {
         // 消毒数据
         try {
             $credentials = $this->validate($request, [
-                'username' => 'required|max:255',
+                'username' => ['required', 'max:255', 'regex:/^[a-zA-Z][a-zA-Z0-9_]+$/'],
                 'password' => ['required', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(_|[^\w])).+$/', 'min:8'],
             ]);
         } catch (ValidationException $e) {

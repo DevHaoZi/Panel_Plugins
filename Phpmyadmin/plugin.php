@@ -2,7 +2,7 @@
 /**
  * Name: phpMyAdmin插件
  * Author: 耗子
- * Date: 2022-11-30
+ * Date: 2022-12-09
  */
 
 use Illuminate\Support\Facades\Route;
@@ -21,5 +21,6 @@ app('router')->group([
     'middleware' => ['auth:sanctum'],
 ], function () {
     Route::get('info', [PhpmyadminController::class, 'info']);
+    Route::post('setPort', [PhpmyadminController::class, 'setPort']);
 });
 
