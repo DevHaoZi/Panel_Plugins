@@ -1,7 +1,7 @@
 {
   "name": "Fail2ban",
   "author": "耗子",
-  "describe": "Pure-Ftpd 是一个快速、高效、轻便、安全的 FTP 服务器，它以安全和配置简单为设计目标，支持虚拟主机，IPV6，PAM 等功能。",
+  "describe": "Fail2ban 扫描系统日志文件并从中找出多次尝试失败的IP地址，将该IP地址加入防火墙的拒绝访问列表中。",
   "slug": "fail2ban",
   "version": "1.0.0"
 }

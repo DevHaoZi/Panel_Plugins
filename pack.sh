@@ -11,14 +11,14 @@ HR="+----------------------------------------------------"
 # 作者: 耗子
 
 rm -rf pack
+dirList=$(ls -l | grep ^d | awk '{print $NF}')
 mkdir -p pack
 # 遍历所有目录
-for dir in `ls -l | grep ^d | awk '{print $NF}'`
-do
-    # 将目录名转为小写，作为打包文件名
-    filename=`echo $dir | tr '[A-Z]' '[a-z]'`
+for dir in $dirList; do
+    # 将目录名按大小写进行转换并以-分割
+    filename=$(echo $dir | sed 's/\([A-Z]\)/-\1/g' | sed 's/^-//' | tr '[:upper:]' '[:lower:]')
     # 打包
     cd $dir
-    zip -r ../pack/$filename.zip * -x *.git* -x *.idea* -x *.DS_Store*
+    zip -qr ../pack/$filename.zip * -x *.git* -x *.idea* -x *.DS_Store*
     cd ..
 done
