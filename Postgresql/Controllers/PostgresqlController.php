@@ -207,7 +207,7 @@ class PostgresqlController extends Controller
     public function load(): JsonResponse
     {
         // 判断PostgreSQL是否启动
-        shell_exec('systemctl restart postgresql-15');
+        shell_exec('systemctl status postgresql-15');
         $status = shell_exec('systemctl status postgresql-15 | grep Active | grep -v grep | awk \'{print $2}\'');
         // 格式化掉换行符
         $status = trim($status);
@@ -222,13 +222,13 @@ class PostgresqlController extends Controller
         $res['data'][0]['name'] = '启动时间';
         $res['data'][0]['value'] = Carbon::create(shell_exec('echo "select pg_postmaster_start_time();"|su - postgres -c "psql"|sed -n 3p'))->toDateTimeString();
         $res['data'][1]['name'] = '进程PID';
-        $res['data'][1]['value'] = shell_exec('echo "select pg_backend_pid();"|su - postgres -c "psql"|sed -n 3p');
+        $res['data'][1]['value'] = trim(shell_exec('echo "select pg_backend_pid();"|su - postgres -c "psql"|sed -n 3p'));
         $res['data'][2]['name'] = '进程数';
-        $res['data'][2]['value'] = shell_exec('ps aux | grep postgres | grep -v grep | wc -l');
+        $res['data'][2]['value'] = trim(shell_exec('ps aux | grep postgres | grep -v grep | wc -l'));
         $res['data'][3]['name'] = '总连接数';
-        $res['data'][3]['value'] = shell_exec('echo "SELECT count(*) FROM pg_stat_activity WHERE NOT pid=pg_backend_pid();"|su - postgres -c "psql"|sed -n 3p');
+        $res['data'][3]['value'] = trim(shell_exec('echo "SELECT count(*) FROM pg_stat_activity WHERE NOT pid=pg_backend_pid();"|su - postgres -c "psql"|sed -n 3p'));
         $res['data'][4]['name'] = '空间占用';
-        $res['data'][4]['value'] = shell_exec('echo "select pg_size_pretty(pg_database_size(\'postgres\'));"|su - postgres -c "psql"|sed -n 3p');
+        $res['data'][4]['value'] = trim(shell_exec('echo "select pg_size_pretty(pg_database_size(\'postgres\'));"|su - postgres -c "psql"|sed -n 3p'));
 
         return response()->json($res);
     }
@@ -257,7 +257,7 @@ class PostgresqlController extends Controller
      */
     public function getDatabases(): JsonResponse
     {
-        $databases = shell_exec('echo "\l"|su - postgres -c "psql"');
+        $databases = shell_exec('echo "\l"|su - postgres -c "psql" 2>&1');
         // 处理数据
         $databases = explode(PHP_EOL, $databases);
         $databases = array_slice($databases, 3, -3);

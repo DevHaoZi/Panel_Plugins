@@ -78,7 +78,7 @@ class PhpmyadminController extends Controller
             return response()->json(['code' => 1, 'msg' => '未找到phpMyAdmin配置文件，可能已损坏']);
         }
         // 替换端口
-        preg_replace('/listen\s+(\d+);/', 'listen '.$port.';', $nginxConfig);
+        $nginxConfig = preg_replace('/listen\s+(\d+);/', 'listen '.$port.';', $nginxConfig);
         $res = file_put_contents('/www/server/vhost/phpmyadmin.conf', $nginxConfig);
         if ($res === false) {
             return response()->json(['code' => 1, 'msg' => '修改保存失败']);

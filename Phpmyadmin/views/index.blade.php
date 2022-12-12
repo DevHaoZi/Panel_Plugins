@@ -62,7 +62,7 @@ Date: 2022-12-09
                 // 获取当前域名
                 let hostname = window.location.hostname;
                 // 拼接phpmyadmin访问地址
-                let phpmyadmin_url = 'http://' + hostname + ':888/' + result.data.phpmyadmin;
+                let phpmyadmin_url = 'http://' + hostname + ':' + result.data.port + '/' + result.data.phpmyadmin;
                 $('#phpmyadmin-info').html('<a href="' + phpmyadmin_url + '" target="_blank">' + phpmyadmin_url + '</a>');
                 $('input[name=phpmyadmin_port]').val(result.data.port);
                 $('input').attr('disabled', false);
